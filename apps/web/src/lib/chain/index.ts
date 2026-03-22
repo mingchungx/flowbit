@@ -2,6 +2,7 @@ import { parseUnits, formatUnits } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { publicClient, getDeployerClient } from "./client";
 import { testUsdcAbi } from "./testUsdcAbi";
+import { decryptPrivateKey } from "@/lib/crypto/keys";
 
 function getContractAddress(): `0x${string}` {
   const addr = process.env.TEST_USDC_ADDRESS;
@@ -80,7 +81,9 @@ export async function transferOnChain(
   const { createWalletClient, http } = await import("viem");
   const { baseSepolia } = await import("viem/chains");
 
-  const account = privateKeyToAccount(senderPrivateKey);
+  // Decrypt the key if it was stored encrypted
+  const rawKey = decryptPrivateKey(senderPrivateKey) as `0x${string}`;
+  const account = privateKeyToAccount(rawKey);
   const client = createWalletClient({
     account,
     chain: baseSepolia,
