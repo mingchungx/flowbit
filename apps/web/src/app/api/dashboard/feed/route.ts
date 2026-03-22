@@ -1,18 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { transactions, wallets } from "@/lib/db/schema";
-import { sql, gt, desc, eq } from "drizzle-orm";
+import { sql, lt, desc, eq, and } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Cursor-based paginated feed for loading transaction history.
+ *
+ * Query params:
+ *   before  — ISO timestamp cursor (load transactions older than this)
+ *   limit   — page size (default 50, max 200)
+ *   wallet_id — optional filter
+ *
+ * Returns { transactions, nextCursor } where nextCursor is null if no more pages.
+ */
 export async function GET(request: NextRequest) {
   try {
-    const since = request.nextUrl.searchParams.get("since");
-    const limit = parseInt(
-      request.nextUrl.searchParams.get("limit") || "50",
-      10
-    );
+    const before = request.nextUrl.searchParams.get("before");
     const walletId = request.nextUrl.searchParams.get("wallet_id");
+    const limit = Math.min(
+      parseInt(request.nextUrl.searchParams.get("limit") || "50", 10),
+      200
+    );
 
     const fromWallet = db
       .select({ id: wallets.id, name: wallets.name })
@@ -22,6 +32,16 @@ export async function GET(request: NextRequest) {
       .select({ id: wallets.id, name: wallets.name })
       .from(wallets)
       .as("to_wallet");
+
+    const conditions = [];
+    if (before) {
+      conditions.push(lt(transactions.createdAt, new Date(before)));
+    }
+    if (walletId) {
+      conditions.push(
+        sql`(${transactions.fromWalletId} = ${walletId} OR ${transactions.toWalletId} = ${walletId})`
+      );
+    }
 
     let query = db
       .select({
@@ -40,22 +60,19 @@ export async function GET(request: NextRequest) {
       .leftJoin(fromWallet, eq(transactions.fromWalletId, fromWallet.id))
       .innerJoin(toWallet, eq(transactions.toWalletId, toWallet.id))
       .orderBy(desc(transactions.createdAt))
-      .limit(limit)
+      .limit(limit + 1) // fetch one extra to know if there's a next page
       .$dynamic();
 
-    if (since) {
-      query = query.where(gt(transactions.createdAt, new Date(since)));
-    }
-
-    if (walletId) {
-      query = query.where(
-        sql`(${transactions.fromWalletId} = ${walletId} OR ${transactions.toWalletId} = ${walletId})`
-      );
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
     }
 
     const rows = await query;
 
-    const result = rows.map((row) => ({
+    const hasMore = rows.length > limit;
+    const page = hasMore ? rows.slice(0, limit) : rows;
+
+    const result = page.map((row) => ({
       id: row.id,
       amount: row.amount,
       memo: row.memo,
@@ -69,7 +86,12 @@ export async function GET(request: NextRequest) {
       toWallet: { id: row.toWalletId, name: row.toWalletName },
     }));
 
-    return NextResponse.json({ transactions: result });
+    const nextCursor =
+      hasMore && page.length > 0
+        ? page[page.length - 1].createdAt.toISOString()
+        : null;
+
+    return NextResponse.json({ transactions: result, nextCursor });
   } catch (error) {
     return NextResponse.json(
       { error: (error as Error).message },
