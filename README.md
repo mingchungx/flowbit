@@ -1,9 +1,5 @@
 # Flowbit
 
-Programmable financial infrastructure for autonomous agents. Agents can hold funds, spend safely under constraints, and operate without human intervention.
-
-## Overview
-
 Flowbit is a **programmable financial layer for autonomous agents**. It lets AI agents hold USDC in custodial wallets, send payments under policy constraints, and track everything via a double-entry ledger. The system runs off-chain for speed with optional on-chain settlement on Base Sepolia.
 
 **Core concepts:**
