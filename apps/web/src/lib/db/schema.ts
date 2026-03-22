@@ -88,3 +88,50 @@ export const policies = pgTable(
   },
   (table) => [index("policies_wallet_idx").on(table.walletId)]
 );
+
+export const agreements = pgTable(
+  "agreements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    payerWalletId: uuid("payer_wallet_id")
+      .references(() => wallets.id)
+      .notNull(),
+    payeeWalletId: uuid("payee_wallet_id")
+      .references(() => wallets.id)
+      .notNull(),
+    type: varchar("type", { length: 20 }).notNull(),
+    amount: decimal("amount", { precision: 18, scale: 6 }).notNull(),
+    unit: varchar("unit", { length: 50 }),
+    interval: varchar("interval", { length: 20 }).notNull(),
+    nextDueAt: timestamp("next_due_at").notNull(),
+    status: varchar("status", { length: 20 }).notNull().default("active"),
+    metadata: jsonb("metadata").default({}),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("agreements_payer_wallet_idx").on(table.payerWalletId),
+    index("agreements_payee_wallet_idx").on(table.payeeWalletId),
+    index("agreements_status_next_due_idx").on(table.status, table.nextDueAt),
+  ]
+);
+
+export const usageRecords = pgTable(
+  "usage_records",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    agreementId: uuid("agreement_id")
+      .references(() => agreements.id)
+      .notNull(),
+    quantity: decimal("quantity", { precision: 18, scale: 6 }).notNull(),
+    reportedAt: timestamp("reported_at").defaultNow().notNull(),
+    settledAt: timestamp("settled_at"),
+  },
+  (table) => [
+    index("usage_records_agreement_idx").on(table.agreementId),
+    index("usage_records_agreement_unsettled_idx").on(
+      table.agreementId,
+      table.settledAt
+    ),
+  ]
+);

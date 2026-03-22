@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { db } from "@/lib/db";
-import { wallets, transactions, ledgerEntries, policies } from "@/lib/db/schema";
+import { wallets, transactions, ledgerEntries, policies, usageRecords, agreements } from "@/lib/db/schema";
 import {
   createWallet,
   getWallet,
@@ -15,6 +15,8 @@ import {
 
 beforeEach(async () => {
   // Clean all tables before each test (order matters for FK constraints)
+  await db.delete(usageRecords);
+  await db.delete(agreements);
   await db.delete(ledgerEntries);
   await db.delete(transactions);
   await db.delete(policies);
