@@ -1,6 +1,7 @@
 export interface Wallet {
   id: string;
   name: string;
+  address: string;
   currency: string;
   balance: string;
   createdAt: string;
@@ -15,6 +16,7 @@ export interface Transaction {
   amount: string;
   memo: string | null;
   status: string;
+  txHash: string | null;
   createdAt: string;
 }
 

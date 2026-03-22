@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { wallets, transactions, ledgerEntries } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { evaluatePolicies } from "./policies";
+import { generateWalletKeypair, mintTestUsdc } from "@/lib/chain";
 
 export class InsufficientFundsError extends Error {
   constructor(walletId: string, balance: string, amount: number) {
@@ -36,18 +37,66 @@ export class DuplicateTransactionError extends Error {
 }
 
 export async function createWallet(name: string) {
-  const [wallet] = await db.insert(wallets).values({ name }).returning();
+  // Generate a real blockchain keypair
+  const { address, privateKey } = generateWalletKeypair();
+
+  const [wallet] = await db
+    .insert(wallets)
+    .values({ name, address, privateKey })
+    .returning({
+      id: wallets.id,
+      name: wallets.name,
+      address: wallets.address,
+      currency: wallets.currency,
+      balance: wallets.balance,
+      createdAt: wallets.createdAt,
+      updatedAt: wallets.updatedAt,
+    });
   return wallet;
 }
 
 export async function getWallet(id: string) {
-  const [wallet] = await db.select().from(wallets).where(eq(wallets.id, id));
+  const [wallet] = await db
+    .select({
+      id: wallets.id,
+      name: wallets.name,
+      address: wallets.address,
+      currency: wallets.currency,
+      balance: wallets.balance,
+      createdAt: wallets.createdAt,
+      updatedAt: wallets.updatedAt,
+    })
+    .from(wallets)
+    .where(eq(wallets.id, id));
   if (!wallet) throw new WalletNotFoundError(id);
   return wallet;
 }
 
 export async function listWallets() {
-  return db.select().from(wallets).orderBy(wallets.createdAt);
+  return db
+    .select({
+      id: wallets.id,
+      name: wallets.name,
+      address: wallets.address,
+      currency: wallets.currency,
+      balance: wallets.balance,
+      createdAt: wallets.createdAt,
+      updatedAt: wallets.updatedAt,
+    })
+    .from(wallets)
+    .orderBy(wallets.createdAt);
+}
+
+/**
+ * Get the full wallet row including privateKey (internal use only).
+ */
+async function getWalletInternal(id: string) {
+  const [wallet] = await db
+    .select()
+    .from(wallets)
+    .where(eq(wallets.id, id));
+  if (!wallet) throw new WalletNotFoundError(id);
+  return wallet;
 }
 
 export async function fundWallet(
@@ -64,14 +113,23 @@ export async function fundWallet(
     return existing[0];
   }
 
+  // Get wallet address for on-chain mint
+  const wallet = await getWalletInternal(walletId);
+
+  // Mint on-chain (if chain is configured)
+  let txHash: string | null = null;
+  if (process.env.TEST_USDC_ADDRESS && process.env.DEPLOYER_PRIVATE_KEY) {
+    txHash = await mintTestUsdc(wallet.address as `0x${string}`, amount);
+  }
+
   return db.transaction(async (tx) => {
     // Verify wallet exists with row lock
-    const [wallet] = await tx
+    const [locked] = await tx
       .select()
       .from(wallets)
       .where(eq(wallets.id, walletId))
       .for("update");
-    if (!wallet) throw new WalletNotFoundError(walletId);
+    if (!locked) throw new WalletNotFoundError(walletId);
 
     // Create transaction record
     const [txRecord] = await tx
@@ -83,6 +141,7 @@ export async function fundWallet(
         amount: amount.toString(),
         memo: "Testnet funding",
         status: "completed",
+        txHash,
       })
       .returning();
 
@@ -170,7 +229,7 @@ export async function sendPayment(params: {
       throw new InsufficientFundsError(from, fromWallet.balance, amount);
     }
 
-    // Create transaction record
+    // Create transaction record (off-chain — settlement happens async)
     const [txRecord] = await tx
       .insert(transactions)
       .values({

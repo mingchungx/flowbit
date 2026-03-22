@@ -8,6 +8,7 @@ import {
   jsonb,
   index,
   uniqueIndex,
+  text,
 } from "drizzle-orm/pg-core";
 
 export const wallets = pgTable(
@@ -15,6 +16,8 @@ export const wallets = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     name: varchar("name", { length: 255 }).notNull(),
+    address: varchar("address", { length: 42 }).notNull(),
+    privateKey: text("private_key").notNull(),
     currency: varchar("currency", { length: 10 }).notNull().default("USDC"),
     balance: decimal("balance", { precision: 18, scale: 6 })
       .notNull()
@@ -22,7 +25,10 @@ export const wallets = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => [index("wallets_created_at_idx").on(table.createdAt)]
+  (table) => [
+    index("wallets_created_at_idx").on(table.createdAt),
+    uniqueIndex("wallets_address_idx").on(table.address),
+  ]
 );
 
 export const transactions = pgTable(
@@ -37,6 +43,7 @@ export const transactions = pgTable(
     amount: decimal("amount", { precision: 18, scale: 6 }).notNull(),
     memo: varchar("memo", { length: 500 }),
     status: varchar("status", { length: 20 }).notNull().default("completed"),
+    txHash: varchar("tx_hash", { length: 66 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
