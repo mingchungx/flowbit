@@ -28,7 +28,9 @@ export class WalletNotFoundError extends Error {
 
 export class DuplicateTransactionError extends Error {
   constructor(idempotencyKey: string) {
-    super(`Transaction with idempotency key already exists: ${idempotencyKey}`);
+    super(
+      `Transaction with idempotency key already exists: ${idempotencyKey}`
+    );
     this.name = "DuplicateTransactionError";
   }
 }
@@ -53,10 +55,7 @@ export async function fundWallet(
   amount: number,
   idempotencyKey: string
 ) {
-  const wallet = await getWallet(walletId);
-  if (!wallet) throw new WalletNotFoundError(walletId);
-
-  // Check for duplicate idempotency key
+  // Check for duplicate idempotency key first (outside tx is fine — idempotent)
   const existing = await db
     .select()
     .from(transactions)
@@ -65,37 +64,47 @@ export async function fundWallet(
     return existing[0];
   }
 
-  // Create transaction record (fromWalletId is null for funding)
-  const [tx] = await db
-    .insert(transactions)
-    .values({
-      idempotencyKey,
-      fromWalletId: null,
-      toWalletId: walletId,
+  return db.transaction(async (tx) => {
+    // Verify wallet exists with row lock
+    const [wallet] = await tx
+      .select()
+      .from(wallets)
+      .where(eq(wallets.id, walletId))
+      .for("update");
+    if (!wallet) throw new WalletNotFoundError(walletId);
+
+    // Create transaction record
+    const [txRecord] = await tx
+      .insert(transactions)
+      .values({
+        idempotencyKey,
+        fromWalletId: null,
+        toWalletId: walletId,
+        amount: amount.toString(),
+        memo: "Testnet funding",
+        status: "completed",
+      })
+      .returning();
+
+    // Create credit ledger entry
+    await tx.insert(ledgerEntries).values({
+      transactionId: txRecord.id,
+      walletId,
       amount: amount.toString(),
-      memo: "Testnet funding",
-      status: "completed",
-    })
-    .returning();
+      direction: "credit",
+    });
 
-  // Create credit ledger entry
-  await db.insert(ledgerEntries).values({
-    transactionId: tx.id,
-    walletId,
-    amount: amount.toString(),
-    direction: "credit",
+    // Update cached balance
+    await tx
+      .update(wallets)
+      .set({
+        balance: sql`${wallets.balance} + ${amount.toString()}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(wallets.id, walletId));
+
+    return txRecord;
   });
-
-  // Update cached balance
-  await db
-    .update(wallets)
-    .set({
-      balance: sql`${wallets.balance} + ${amount.toString()}`,
-      updatedAt: new Date(),
-    })
-    .where(eq(wallets.id, walletId));
-
-  return tx;
 }
 
 export async function sendPayment(params: {
@@ -115,7 +124,7 @@ export async function sendPayment(params: {
     throw new Error("Cannot send to the same wallet");
   }
 
-  // Check for duplicate idempotency key
+  // Check for duplicate idempotency key (outside tx — idempotent return)
   const existing = await db
     .select()
     .from(transactions)
@@ -124,18 +133,7 @@ export async function sendPayment(params: {
     return existing[0];
   }
 
-  // Validate both wallets exist
-  const fromWallet = await getWallet(from);
-  const toWallet = await getWallet(to);
-  if (!fromWallet) throw new WalletNotFoundError(from);
-  if (!toWallet) throw new WalletNotFoundError(to);
-
-  // Check balance
-  if (parseFloat(fromWallet.balance) < amount) {
-    throw new InsufficientFundsError(from, fromWallet.balance, amount);
-  }
-
-  // Evaluate policies
+  // Evaluate policies before entering the transaction (read-only check)
   const policyResult = await evaluatePolicies({
     walletId: from,
     amount,
@@ -145,53 +143,81 @@ export async function sendPayment(params: {
     throw new PolicyViolationError(policyResult.reason!);
   }
 
-  // Execute the transfer atomically using a transaction
-  const [tx] = await db
-    .insert(transactions)
-    .values({
-      idempotencyKey,
-      fromWalletId: from,
-      toWalletId: to,
-      amount: amount.toString(),
-      memo: memo || null,
-      status: "completed",
-    })
-    .returning();
+  return db.transaction(async (tx) => {
+    // Lock both wallets in consistent order to prevent deadlocks
+    const [first, second] = from < to ? [from, to] : [to, from];
 
-  // Create debit entry for sender
-  await db.insert(ledgerEntries).values({
-    transactionId: tx.id,
-    walletId: from,
-    amount: amount.toString(),
-    direction: "debit",
+    const [wallet1] = await tx
+      .select()
+      .from(wallets)
+      .where(eq(wallets.id, first))
+      .for("update");
+    const [wallet2] = await tx
+      .select()
+      .from(wallets)
+      .where(eq(wallets.id, second))
+      .for("update");
+
+    if (!wallet1 || !wallet2) {
+      const missing = !wallet1 ? first : second;
+      throw new WalletNotFoundError(missing);
+    }
+
+    const fromWallet = first === from ? wallet1 : wallet2;
+
+    // Check balance under lock
+    if (parseFloat(fromWallet.balance) < amount) {
+      throw new InsufficientFundsError(from, fromWallet.balance, amount);
+    }
+
+    // Create transaction record
+    const [txRecord] = await tx
+      .insert(transactions)
+      .values({
+        idempotencyKey,
+        fromWalletId: from,
+        toWalletId: to,
+        amount: amount.toString(),
+        memo: memo || null,
+        status: "completed",
+      })
+      .returning();
+
+    // Create ledger entries
+    await tx.insert(ledgerEntries).values([
+      {
+        transactionId: txRecord.id,
+        walletId: from,
+        amount: amount.toString(),
+        direction: "debit",
+      },
+      {
+        transactionId: txRecord.id,
+        walletId: to,
+        amount: amount.toString(),
+        direction: "credit",
+      },
+    ]);
+
+    // Update cached balances
+    await tx
+      .update(wallets)
+      .set({
+        balance: sql`${wallets.balance} - ${amount.toString()}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(wallets.id, from));
+
+    await tx
+      .update(wallets)
+      .set({
+        balance: sql`${wallets.balance} + ${amount.toString()}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(wallets.id, to));
+
+    return txRecord;
   });
-
-  // Create credit entry for receiver
-  await db.insert(ledgerEntries).values({
-    transactionId: tx.id,
-    walletId: to,
-    amount: amount.toString(),
-    direction: "credit",
-  });
-
-  // Update cached balances
-  await db
-    .update(wallets)
-    .set({
-      balance: sql`${wallets.balance} - ${amount.toString()}`,
-      updatedAt: new Date(),
-    })
-    .where(eq(wallets.id, from));
-
-  await db
-    .update(wallets)
-    .set({
-      balance: sql`${wallets.balance} + ${amount.toString()}`,
-      updatedAt: new Date(),
-    })
-    .where(eq(wallets.id, to));
-
-  return tx;
 }
 
 export async function getTransactions(walletId: string) {
