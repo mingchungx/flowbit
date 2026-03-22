@@ -96,7 +96,7 @@ Note: This is testnet infrastructure. For production, private keys would need HS
 The `@flowbit/sdk` package provides a typed TypeScript client:
 
 ```typescript
-const pay = new AgentPay({ baseUrl: "http://localhost:3000" });
+const pay = new FlowbitClient({ baseUrl: "http://localhost:3000" });
 const wallet = await pay.createWallet("my-agent");
 await pay.send({ from: wallet.id, to: vendorId, amount: 5 });
 ```

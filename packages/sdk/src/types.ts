@@ -37,7 +37,7 @@ export interface SendPaymentParams {
   idempotencyKey?: string;
 }
 
-export interface AgentPayConfig {
+export interface FlowbitConfig {
   baseUrl?: string;
   apiKey?: string;
 }

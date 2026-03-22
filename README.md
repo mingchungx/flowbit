@@ -134,9 +134,9 @@ All commands output JSON. Set `FLOWBIT_API_URL` to point at a different server.
 ### 3. TypeScript SDK
 
 ```typescript
-import { AgentPay } from "@flowbit/sdk";
+import { FlowbitClient } from "@flowbit/sdk";
 
-const pay = new AgentPay({ baseUrl: "http://localhost:3000" });
+const pay = new FlowbitClient({ baseUrl: "http://localhost:3000" });
 
 // Create and fund a wallet
 const wallet = await pay.createWallet("my-agent");

@@ -11,9 +11,9 @@ pnpm build
 ## Client Usage
 
 ```typescript
-import { AgentPay } from "@flowbit/sdk";
+import { FlowbitClient } from "@flowbit/sdk";
 
-const pay = new AgentPay({ baseUrl: "http://localhost:3000" });
+const pay = new FlowbitClient({ baseUrl: "http://localhost:3000" });
 
 // Wallets
 const wallet = await pay.createWallet("my-agent");
@@ -62,6 +62,6 @@ import type {
   Transaction,
   Policy,
   SendPaymentParams,
-  AgentPayConfig,
+  FlowbitClientConfig,
 } from "@flowbit/sdk";
 ```

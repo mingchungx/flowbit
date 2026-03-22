@@ -3,16 +3,16 @@ import type {
   Transaction,
   Policy,
   SendPaymentParams,
-  AgentPayConfig,
+  FlowbitConfig,
 } from "./types.js";
 
-export type { Wallet, Transaction, Policy, SendPaymentParams, AgentPayConfig };
+export type { Wallet, Transaction, Policy, SendPaymentParams, FlowbitConfig };
 
-export class AgentPay {
+export class FlowbitClient {
   private baseUrl: string;
   private apiKey?: string;
 
-  constructor(config: AgentPayConfig = {}) {
+  constructor(config: FlowbitConfig = {}) {
     this.baseUrl = (config.baseUrl || "http://localhost:3000").replace(
       /\/$/,
       ""

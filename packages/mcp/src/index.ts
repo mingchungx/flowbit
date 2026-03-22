@@ -3,10 +3,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { AgentPay } from "@flowbit/sdk";
+import { FlowbitClient } from "@flowbit/sdk";
 
 const baseUrl = process.env.FLOWBIT_API_URL || "http://localhost:3000";
-const client = new AgentPay({ baseUrl });
+const client = new FlowbitClient({ baseUrl });
 
 const server = new McpServer({
   name: "flowbit",
