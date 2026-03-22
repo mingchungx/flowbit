@@ -1,9 +1,10 @@
 # @flowbit/web
 
-Next.js 16 application that serves the Flowbit API and will eventually host the frontend dashboard.
+Next.js 16 application that serves the Flowbit API and the real-time monitoring dashboard.
 
 ## What's here
 
+- **Dashboard** (`src/components/dashboard/`) — terminal-style real-time monitor at `/`
 - **API routes** (`src/app/api/`) — REST endpoints for wallets, payments, policies, transactions
 - **Core engine** (`src/lib/core/`) — double-entry ledger, policy engine, wallet operations
 - **DB layer** (`src/lib/db/`) — Drizzle ORM schema and Postgres connection
@@ -16,6 +17,29 @@ Next.js 16 application that serves the Flowbit API and will eventually host the 
 docker compose up -d   # Start Postgres
 pnpm db:push           # Push schema
 pnpm dev               # Start dev server at :3000
+```
+
+Open http://localhost:3000 to see the monitoring dashboard.
+
+## Dashboard
+
+The dashboard at `/` is a terminal-style real-time monitor with 5 panels:
+
+- **Status bar** — total wallets, system balance, tx counts (1h/24h), last activity
+- **Wallet table** — click a wallet to filter the transaction feed
+- **Transaction feed** — live log (3s polling), color-coded FUND (green) / SEND (amber)
+- **Ledger inspector** — click a transaction to see double-entry debit/credit detail
+- **Policy overview** — collapsible view of all active spending constraints
+
+Keyboard: `Esc` to deselect. Toggle dark/light mode with the button in the top-right.
+
+To see data in the dashboard, create wallets and send payments via the CLI or API:
+
+```bash
+pnpm agent-pay wallet create --name "my-agent"
+pnpm agent-pay fund <wallet-id> --amount 100
+pnpm agent-pay wallet create --name "vendor"
+pnpm agent-pay send --from <agent-id> --to <vendor-id> --amount 25
 ```
 
 ## API Endpoints
@@ -31,6 +55,10 @@ pnpm dev               # Start dev server at :3000
 | `/api/wallets/:id/onchain` | `GET` | Ledger vs on-chain balance |
 | `/api/send` | `POST` | Send payment `{ from, to, amount, idempotency_key }` |
 | `/api/transactions` | `GET` | Transaction log `?wallet_id=` |
+| `/api/dashboard/overview` | `GET` | Aggregated system stats |
+| `/api/dashboard/feed` | `GET` | Transaction feed `?since=&wallet_id=&limit=` |
+| `/api/dashboard/ledger/:txId` | `GET` | Double-entry ledger detail |
+| `/api/dashboard/policies` | `GET` | All policies with wallet names |
 
 ## Scripts
 
