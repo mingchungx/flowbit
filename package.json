@@ -5,8 +5,12 @@
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
     "lint": "pnpm --filter web lint",
+    "db:check": "pnpm --filter web db:check",
+    "db:drop": "pnpm --filter web db:drop",
+    "db:gen": "pnpm --filter web db:gen",
+    "db:migrate": "pnpm --filter web db:migrate",
     "db:push": "pnpm --filter web db:push",
-    "db:generate": "pnpm --filter web db:generate",
+    "db:studio": "pnpm --filter web db:studio",
     "cli:build": "pnpm --filter @flowbit/cli build",
     "agent-pay": "node packages/cli/dist/index.js",
     "test": "pnpm --filter web test"

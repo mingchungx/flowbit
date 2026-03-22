@@ -39,8 +39,11 @@ pnpm dev              # Start dev server
 pnpm build            # Production build
 pnpm test             # Run integration tests
 pnpm test:watch       # Watch mode
-pnpm db:push          # Push schema to Postgres
-pnpm db:generate      # Generate migration files
+pnpm db:push          # Push schema directly (dev only)
+pnpm db:gen <name>    # Generate a named migration
+pnpm db:migrate       # Run pending migrations
+pnpm db:check         # Verify migrations match schema
+pnpm db:drop          # Drop a migration
 pnpm db:studio        # Open Drizzle Studio
 pnpm deploy:usdc      # Deploy TestUSDC to Base Sepolia
 ```

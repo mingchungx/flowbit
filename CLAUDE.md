@@ -72,7 +72,10 @@ pnpm test                # Run tests (needs Postgres)
 
 **Adding a new policy type:** Add the check function in `policies.ts`, add the case to the switch in `evaluatePolicies`, add param validation in the policies API route handler.
 
-**Changing the DB schema:** Edit `apps/web/src/lib/db/schema.ts`, then run `pnpm db:push` to apply. For production, use `pnpm db:generate` to create migration files instead.
+**Changing the DB schema:** Edit `apps/web/src/lib/db/schema.ts`, then:
+- Dev: `pnpm db:push` to apply directly
+- Production: `pnpm db:gen <migration-name>` to generate a named migration, then `pnpm db:migrate` to run it
+- Verify: `pnpm db:check` to confirm migrations are consistent with the schema
 
 **Adding SDK methods:** Add the method to `packages/sdk/src/index.ts`, update types in `types.ts`, rebuild with `pnpm --filter @flowbit/sdk build`.
 
