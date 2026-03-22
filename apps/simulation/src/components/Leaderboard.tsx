@@ -14,7 +14,8 @@ interface Props {
 }
 
 export function Leaderboard({ selectedAgentId, onSelectAgent }: Props) {
-  const { data } = usePoll<LeaderboardEntry[]>("/api/simulation/leaderboard", 2000);
+  const { data: raw } = usePoll<{ leaderboard: LeaderboardEntry[] } | LeaderboardEntry[]>("/api/simulation/leaderboard", 2000);
+  const data = raw ? (Array.isArray(raw) ? raw : raw.leaderboard) : null;
 
   return (
     <div className="flex flex-col overflow-hidden border-t border-[var(--color-border)]">
