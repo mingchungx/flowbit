@@ -13,6 +13,8 @@
     "db:studio": "pnpm --filter web db:studio",
     "cli:build": "pnpm --filter @flowbit/cli build",
     "agent-pay": "node packages/cli/dist/index.js",
-    "test": "pnpm --filter web test"
+    "test": "pnpm --filter web test",
+    "sim:dev": "pnpm --filter simulation dev",
+    "sim:build": "pnpm --filter simulation build"
   }
 }
