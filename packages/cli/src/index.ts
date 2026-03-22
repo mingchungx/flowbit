@@ -177,6 +177,151 @@ policy
     }
   });
 
+// ── agreement commands ──
+
+const agreement = program
+  .command("agreement")
+  .description("Manage recurring agreements");
+
+agreement
+  .command("create")
+  .description("Create a new agreement between two wallets")
+  .requiredOption("--payer <wallet-id>", "Payer wallet ID")
+  .requiredOption("--payee <wallet-id>", "Payee wallet ID")
+  .requiredOption(
+    "--type <type>",
+    "Agreement type (subscription, usage, retainer)"
+  )
+  .requiredOption("--amount <amount>", "Amount in USDC", parseFloat)
+  .requiredOption(
+    "--interval <interval>",
+    "Billing interval (daily, weekly, monthly)"
+  )
+  .option("--unit <unit>", "Unit for usage-based agreements")
+  .option("--metadata <json>", "Metadata as JSON")
+  .option("--output <format>", "Output format", "json")
+  .action(async (opts) => {
+    try {
+      const metadata = opts.metadata ? JSON.parse(opts.metadata) : undefined;
+      const result = await client.createAgreement({
+        payerWalletId: opts.payer,
+        payeeWalletId: opts.payee,
+        type: opts.type,
+        amount: opts.amount,
+        unit: opts.unit,
+        interval: opts.interval,
+        metadata,
+      });
+      output(result, opts.output);
+    } catch (err) {
+      if (err instanceof SyntaxError) {
+        console.error("Error: --metadata must be valid JSON");
+        process.exit(1);
+      }
+      console.error("Error:", (err as Error).message);
+      process.exit(1);
+    }
+  });
+
+agreement
+  .command("get")
+  .description("Get agreement details")
+  .argument("<agreement-id>", "Agreement ID")
+  .option("--output <format>", "Output format", "json")
+  .action(async (id, opts) => {
+    try {
+      const result = await client.getAgreement(id);
+      output(result, opts.output);
+    } catch (err) {
+      console.error("Error:", (err as Error).message);
+      process.exit(1);
+    }
+  });
+
+agreement
+  .command("list")
+  .description("List agreements")
+  .option("--wallet <wallet-id>", "Filter by wallet ID")
+  .option("--type <type>", "Filter by type (subscription, usage, retainer)")
+  .option(
+    "--status <status>",
+    "Filter by status (active, paused, cancelled, completed)"
+  )
+  .option("--output <format>", "Output format", "json")
+  .action(async (opts) => {
+    try {
+      const result = await client.listAgreements({
+        walletId: opts.wallet,
+        type: opts.type,
+        status: opts.status,
+      });
+      output(result, opts.output);
+    } catch (err) {
+      console.error("Error:", (err as Error).message);
+      process.exit(1);
+    }
+  });
+
+agreement
+  .command("cancel")
+  .description("Cancel an active agreement")
+  .argument("<agreement-id>", "Agreement ID")
+  .option("--output <format>", "Output format", "json")
+  .action(async (id, opts) => {
+    try {
+      const result = await client.cancelAgreement(id);
+      output(result, opts.output);
+    } catch (err) {
+      console.error("Error:", (err as Error).message);
+      process.exit(1);
+    }
+  });
+
+agreement
+  .command("usage")
+  .description("Report metered usage for a usage-based agreement")
+  .argument("<agreement-id>", "Agreement ID")
+  .requiredOption("--quantity <quantity>", "Usage quantity", parseFloat)
+  .option("--output <format>", "Output format", "json")
+  .action(async (id, opts) => {
+    try {
+      const result = await client.reportUsage(id, opts.quantity);
+      output(result, opts.output);
+    } catch (err) {
+      console.error("Error:", (err as Error).message);
+      process.exit(1);
+    }
+  });
+
+agreement
+  .command("settle")
+  .description("Settle a specific agreement")
+  .argument("<agreement-id>", "Agreement ID")
+  .option("--output <format>", "Output format", "json")
+  .action(async (id, opts) => {
+    try {
+      const result = await client.settleAgreement(id);
+      output(result, opts.output);
+    } catch (err) {
+      console.error("Error:", (err as Error).message);
+      process.exit(1);
+    }
+  });
+
+agreement
+  .command("settle-all")
+  .description("Settle all agreements that are due for payment")
+  .option("--output <format>", "Output format", "json")
+  .action(async (opts) => {
+    try {
+      const result = await client.settleAllDue();
+      output(result, opts.output);
+    } catch (err) {
+      console.error("Error:", (err as Error).message);
+      process.exit(1);
+    }
+  });
+
 program
   .name("agent-pay")
   .description("Agent-native financial infrastructure CLI")

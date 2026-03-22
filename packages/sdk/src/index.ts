@@ -4,9 +4,23 @@ import type {
   Policy,
   SendPaymentParams,
   FlowbitConfig,
+  Agreement,
+  UsageRecord,
+  CreateAgreementParams,
+  SettlementResult,
 } from "./types.js";
 
-export type { Wallet, Transaction, Policy, SendPaymentParams, FlowbitConfig };
+export type {
+  Wallet,
+  Transaction,
+  Policy,
+  SendPaymentParams,
+  FlowbitConfig,
+  Agreement,
+  UsageRecord,
+  CreateAgreementParams,
+  SettlementResult,
+};
 
 export class FlowbitClient {
   private baseUrl: string;
@@ -109,5 +123,62 @@ export class FlowbitClient {
 
   async listPolicies(walletId: string): Promise<Policy[]> {
     return this.request(`/api/wallets/${walletId}/policies`);
+  }
+
+  // ── Agreements ──
+
+  async createAgreement(params: CreateAgreementParams): Promise<Agreement> {
+    return this.request("/api/agreements", {
+      method: "POST",
+      body: JSON.stringify({
+        payer_wallet_id: params.payerWalletId,
+        payee_wallet_id: params.payeeWalletId,
+        type: params.type,
+        amount: params.amount,
+        unit: params.unit,
+        interval: params.interval,
+        metadata: params.metadata,
+      }),
+    });
+  }
+
+  async getAgreement(id: string): Promise<Agreement> {
+    return this.request(`/api/agreements/${id}`);
+  }
+
+  async listAgreements(
+    filters?: { walletId?: string; type?: string; status?: string }
+  ): Promise<Agreement[]> {
+    const params = new URLSearchParams();
+    if (filters?.walletId) params.set("wallet_id", filters.walletId);
+    if (filters?.type) params.set("type", filters.type);
+    if (filters?.status) params.set("status", filters.status);
+    const qs = params.toString();
+    return this.request(`/api/agreements${qs ? `?${qs}` : ""}`);
+  }
+
+  async cancelAgreement(id: string): Promise<Agreement> {
+    return this.request(`/api/agreements/${id}/cancel`, {
+      method: "POST",
+    });
+  }
+
+  async reportUsage(agreementId: string, quantity: number): Promise<UsageRecord> {
+    return this.request(`/api/agreements/${agreementId}/usage`, {
+      method: "POST",
+      body: JSON.stringify({ quantity }),
+    });
+  }
+
+  async settleAgreement(id: string): Promise<Transaction> {
+    return this.request(`/api/agreements/${id}/settle`, {
+      method: "POST",
+    });
+  }
+
+  async settleAllDue(): Promise<SettlementResult> {
+    return this.request("/api/agreements/settle", {
+      method: "POST",
+    });
   }
 }

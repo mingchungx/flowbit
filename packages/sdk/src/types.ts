@@ -41,3 +41,43 @@ export interface FlowbitConfig {
   baseUrl?: string;
   apiKey?: string;
 }
+
+// ── Agreements ──
+
+export interface Agreement {
+  id: string;
+  payerWalletId: string;
+  payeeWalletId: string;
+  type: "subscription" | "usage" | "retainer";
+  amount: string;
+  unit: string | null;
+  interval: "daily" | "weekly" | "monthly";
+  nextDueAt: string;
+  status: "active" | "paused" | "cancelled" | "completed";
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UsageRecord {
+  id: string;
+  agreementId: string;
+  quantity: string;
+  reportedAt: string;
+  settledAt: string | null;
+}
+
+export interface CreateAgreementParams {
+  payerWalletId: string;
+  payeeWalletId: string;
+  type: "subscription" | "usage" | "retainer";
+  amount: number;
+  unit?: string;
+  interval: "daily" | "weekly" | "monthly";
+  metadata?: Record<string, unknown>;
+}
+
+export interface SettlementResult {
+  settled: number;
+  errors: Array<{ agreementId: string; error: string }>;
+}

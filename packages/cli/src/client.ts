@@ -88,4 +88,71 @@ export class FlowbitClient {
   async getTransactions(walletId: string) {
     return this.request(`/api/transactions?wallet_id=${walletId}`);
   }
+
+  // ── Agreements ──
+
+  async createAgreement(params: {
+    payerWalletId: string;
+    payeeWalletId: string;
+    type: string;
+    amount: number;
+    unit?: string;
+    interval: string;
+    metadata?: Record<string, unknown>;
+  }) {
+    return this.request("/api/agreements", {
+      method: "POST",
+      body: JSON.stringify({
+        payer_wallet_id: params.payerWalletId,
+        payee_wallet_id: params.payeeWalletId,
+        type: params.type,
+        amount: params.amount,
+        unit: params.unit,
+        interval: params.interval,
+        metadata: params.metadata,
+      }),
+    });
+  }
+
+  async getAgreement(id: string) {
+    return this.request(`/api/agreements/${id}`);
+  }
+
+  async listAgreements(filters?: {
+    walletId?: string;
+    type?: string;
+    status?: string;
+  }) {
+    const params = new URLSearchParams();
+    if (filters?.walletId) params.set("wallet_id", filters.walletId);
+    if (filters?.type) params.set("type", filters.type);
+    if (filters?.status) params.set("status", filters.status);
+    const qs = params.toString();
+    return this.request(`/api/agreements${qs ? `?${qs}` : ""}`);
+  }
+
+  async cancelAgreement(id: string) {
+    return this.request(`/api/agreements/${id}/cancel`, {
+      method: "POST",
+    });
+  }
+
+  async reportUsage(agreementId: string, quantity: number) {
+    return this.request(`/api/agreements/${agreementId}/usage`, {
+      method: "POST",
+      body: JSON.stringify({ quantity }),
+    });
+  }
+
+  async settleAgreement(id: string) {
+    return this.request(`/api/agreements/${id}/settle`, {
+      method: "POST",
+    });
+  }
+
+  async settleAllDue() {
+    return this.request("/api/agreements/settle", {
+      method: "POST",
+    });
+  }
 }
