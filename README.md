@@ -119,37 +119,37 @@ curl http://localhost:3000/api/wallets/<wallet-id>/onchain
 pnpm cli:build
 
 # Or use the root shortcut
-pnpm agent-pay --help
+pnpm flowbit --help
 
 # Wallet management
-pnpm agent-pay wallet create --name "my-agent"
-pnpm agent-pay wallet list
-pnpm agent-pay wallet get <wallet-id>
+pnpm flowbit wallet create --name "my-agent"
+pnpm flowbit wallet list
+pnpm flowbit wallet get <wallet-id>
 
 # Fund
-pnpm agent-pay fund <wallet-id> --amount 100
+pnpm flowbit fund <wallet-id> --amount 100
 
 # Send
-pnpm agent-pay send --from <id> --to <id> --amount 10
+pnpm flowbit send --from <id> --to <id> --amount 10
 
 # Transaction logs
-pnpm agent-pay logs <wallet-id>
+pnpm flowbit logs <wallet-id>
 
 # Policies
-pnpm agent-pay policy add --wallet <id> --type max_per_tx --params '{"max": 25}'
-pnpm agent-pay policy list <wallet-id>
+pnpm flowbit policy add --wallet <id> --type max_per_tx --params '{"max": 25}'
+pnpm flowbit policy list <wallet-id>
 ```
 
 ```bash
 # Agreements
-pnpm agent-pay agreement create --payer <id> --payee <id> --type subscription --amount 10 --interval monthly
-pnpm agent-pay agreement create --payer <id> --payee <id> --type usage --amount 0.01 --unit api_call --interval daily
-pnpm agent-pay agreement get <agreement-id>
-pnpm agent-pay agreement list [--wallet <id>] [--type <type>] [--status <status>]
-pnpm agent-pay agreement cancel <agreement-id>
-pnpm agent-pay agreement usage <agreement-id> --quantity 150
-pnpm agent-pay agreement settle <agreement-id>
-pnpm agent-pay agreement settle-all
+pnpm flowbit agreement create --payer <id> --payee <id> --type subscription --amount 10 --interval monthly
+pnpm flowbit agreement create --payer <id> --payee <id> --type usage --amount 0.01 --unit api_call --interval daily
+pnpm flowbit agreement get <agreement-id>
+pnpm flowbit agreement list [--wallet <id>] [--type <type>] [--status <status>]
+pnpm flowbit agreement cancel <agreement-id>
+pnpm flowbit agreement usage <agreement-id> --quantity 150
+pnpm flowbit agreement settle <agreement-id>
+pnpm flowbit agreement settle-all
 ```
 
 All commands output JSON. Set `FLOWBIT_API_URL` to point at a different server.
@@ -282,7 +282,7 @@ flowbit/
 │   ├── src/app/api/           # Simulation control + SSE events
 │   ├── src/components/        # Graph, feed, leaderboard UI
 │   └── src/lib/engine/        # 100-agent simulation engine
-├── packages/cli/              # agent-pay CLI
+├── packages/cli/              # flowbit CLI
 ├── packages/sdk/              # TypeScript SDK + tool definitions
 ├── packages/mcp/              # MCP server for agent frameworks
 ├── contracts/                 # Solidity (TestUSDC)

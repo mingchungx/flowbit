@@ -323,7 +323,7 @@ agreement
   });
 
 program
-  .name("agent-pay")
+  .name("flowbit")
   .description("Agent-native financial infrastructure CLI")
   .version("0.0.1");
 

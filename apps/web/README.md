@@ -36,10 +36,10 @@ Keyboard: `Esc` to deselect. Toggle dark/light mode with the button in the top-r
 To see data in the dashboard, create wallets and send payments via the CLI or API:
 
 ```bash
-pnpm agent-pay wallet create --name "my-agent"
-pnpm agent-pay fund <wallet-id> --amount 100
-pnpm agent-pay wallet create --name "vendor"
-pnpm agent-pay send --from <agent-id> --to <vendor-id> --amount 25
+pnpm flowbit wallet create --name "my-agent"
+pnpm flowbit fund <wallet-id> --amount 100
+pnpm flowbit wallet create --name "vendor"
+pnpm flowbit send --from <agent-id> --to <vendor-id> --amount 25
 ```
 
 ## API Endpoints

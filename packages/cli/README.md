@@ -12,7 +12,7 @@ pnpm build
 
 ```bash
 # Use via the root shortcut
-pnpm agent-pay <command>
+pnpm flowbit <command>
 
 # Or run directly
 node packages/cli/dist/index.js <command>
@@ -22,24 +22,24 @@ node packages/cli/dist/index.js <command>
 
 ```bash
 # Wallets
-agent-pay wallet create --name "my-agent"
-agent-pay wallet list
-agent-pay wallet get <wallet-id>
+flowbit wallet create --name "my-agent"
+flowbit wallet list
+flowbit wallet get <wallet-id>
 
 # Funding
-agent-pay fund <wallet-id> --amount 100
+flowbit fund <wallet-id> --amount 100
 
 # Payments
-agent-pay send --from <id> --to <id> --amount 10 --memo "payment for data"
+flowbit send --from <id> --to <id> --amount 10 --memo "payment for data"
 
 # Transaction logs
-agent-pay logs <wallet-id>
+flowbit logs <wallet-id>
 
 # Policies
-agent-pay policy add --wallet <id> --type max_per_tx --params '{"max": 25}'
-agent-pay policy add --wallet <id> --type daily_limit --params '{"limit": 100}'
-agent-pay policy add --wallet <id> --type allowlist --params '{"allowed_wallets": ["<id>"]}'
-agent-pay policy list <wallet-id>
+flowbit policy add --wallet <id> --type max_per_tx --params '{"max": 25}'
+flowbit policy add --wallet <id> --type daily_limit --params '{"limit": 100}'
+flowbit policy add --wallet <id> --type allowlist --params '{"allowed_wallets": ["<id>"]}'
+flowbit policy list <wallet-id>
 ```
 
 All commands output JSON. Set `FLOWBIT_API_URL` to point at a different server (defaults to `http://localhost:3000`).

@@ -10,7 +10,7 @@ Flowbit is a programmable financial layer for autonomous agents. It lets agents 
 flowbit/
 ├── apps/web/            # Next.js 16 — API server + monitoring dashboard (:3000)
 ├── apps/simulation/     # Next.js 16 — agent economy simulation (:3001)
-├── packages/cli/        # `agent-pay` CLI (Commander.js, hits the API)
+├── packages/cli/        # `flowbit` CLI (Commander.js, hits the API)
 ├── packages/sdk/        # TypeScript client + agent tool schemas
 ├── packages/mcp/        # MCP server (stdio transport, wraps SDK)
 ├── contracts/           # TestUSDC.sol (mintable ERC20 for testnet)

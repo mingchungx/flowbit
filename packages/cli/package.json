@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "bin": {
-    "agent-pay": "./dist/index.js"
+    "flowbit": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",

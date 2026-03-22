@@ -105,7 +105,7 @@ It also exports `agentTools` — an array of JSON Schema tool definitions that p
 
 ### CLI
 
-The `agent-pay` CLI wraps the API with a shell interface. All output is JSON, making it parseable by agents that can execute shell commands.
+The `flowbit` CLI wraps the API with a shell interface. All output is JSON, making it parseable by agents that can execute shell commands.
 
 ### MCP Server
 
@@ -131,7 +131,7 @@ Three agreement types for recurring financial relationships:
 
 Schema: `agreements` table (payer, payee, type, amount, unit, interval, nextDueAt, status) + `usage_records` table (agreementId, quantity, settledAt). All settlements go through `sendPayment` so policies are enforced.
 
-Exposed via API (`/api/agreements/`), CLI (`agent-pay agreement`), SDK (`FlowbitClient`), and MCP tools.
+Exposed via API (`/api/agreements/`), CLI (`flowbit agreement`), SDK (`FlowbitClient`), and MCP tools.
 
 ### Agent Economy Simulation (Implemented)
 
