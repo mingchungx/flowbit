@@ -27,7 +27,7 @@ The dashboard at `/` is a terminal-style real-time monitor with 5 panels:
 
 - **Status bar** — total wallets, system balance, tx counts (1h/24h), last activity
 - **Wallet table** — click a wallet to filter the transaction feed
-- **Transaction feed** — live log (3s polling), color-coded FUND (green) / SEND (amber)
+- **Transaction feed** — live SSE stream, color-coded FUND (green) / SEND (amber), virtual scrolling
 - **Ledger inspector** — click a transaction to see double-entry debit/credit detail
 - **Policy overview** — collapsible view of all active spending constraints
 
@@ -55,6 +55,12 @@ pnpm agent-pay send --from <agent-id> --to <vendor-id> --amount 25
 | `/api/wallets/:id/onchain` | `GET` | Ledger vs on-chain balance |
 | `/api/send` | `POST` | Send payment `{ from, to, amount, idempotency_key }` |
 | `/api/transactions` | `GET` | Transaction log `?wallet_id=` |
+| `/api/agreements` | `GET, POST` | List/create agreements |
+| `/api/agreements/:id` | `GET` | Get agreement details |
+| `/api/agreements/:id/cancel` | `POST` | Cancel an agreement |
+| `/api/agreements/:id/usage` | `POST` | Report metered usage |
+| `/api/agreements/:id/settle` | `POST` | Settle a specific agreement |
+| `/api/agreements/settle` | `POST` | Settle all due agreements |
 | `/api/dashboard/overview` | `GET` | Aggregated system stats |
 | `/api/dashboard/feed` | `GET` | Transaction feed `?since=&wallet_id=&limit=` |
 | `/api/dashboard/ledger/:txId` | `GET` | Double-entry ledger detail |

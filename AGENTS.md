@@ -27,18 +27,21 @@ When locking multiple wallets (as in `sendPayment`), always acquire locks in asc
 ## Package Dependency Graph
 
 ```
-apps/web (Next.js API)  ←  does not depend on packages/*
-packages/sdk            ←  standalone, no internal deps
-packages/cli            ←  standalone, calls API over HTTP
-packages/mcp            ←  depends on @flowbit/sdk
+apps/web (Next.js API)      ←  does not depend on packages/*
+apps/simulation             ←  copies core modules from apps/web (same DB)
+packages/sdk                ←  standalone, no internal deps
+packages/cli                ←  standalone, calls API over HTTP
+packages/mcp                ←  depends on @flowbit/sdk
 ```
 
 Changes to `apps/web` API response shapes must be reflected in `packages/sdk/src/types.ts`. The MCP server and CLI consume through the SDK/HTTP — they do not import from `apps/web` directly.
 
+`apps/simulation` has its own copies of `lib/core/`, `lib/db/`, and `lib/chain/` from `apps/web`. If you change schema or core logic in web, you must update the simulation copies too.
+
 ## Before Submitting Changes
 
-1. **Run `pnpm test`** — all 18+ tests must pass. Tests require Postgres to be running.
-2. **Run `npx tsc --noEmit`** in `apps/web/` — must have zero type errors.
+1. **Run `pnpm test`** — all 35+ tests must pass. Tests require Postgres to be running.
+2. **Run `npx tsc --noEmit`** in both `apps/web/` and `apps/simulation/` — must have zero type errors.
 3. **If you changed the DB schema** — run `pnpm db:push` and verify tests still pass against the new schema.
 4. **If you changed SDK types** — rebuild with `pnpm --filter @flowbit/sdk build`, then rebuild MCP (`pnpm --filter @flowbit/mcp build`) since it depends on the SDK.
 5. **If you changed API response shapes** — update `packages/sdk/src/types.ts` to match.

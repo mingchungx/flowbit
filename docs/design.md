@@ -119,16 +119,32 @@ The `@flowbit/mcp` package implements a Model Context Protocol server over stdio
 4. **Observable** — full audit trail via double-entry ledger. Every cent is traceable.
 5. **Agent-native** — designed for programmatic access, not human UIs. JSON in, JSON out.
 
+## Implemented Phases
+
+### Phase 2: Agreements (Implemented)
+
+Three agreement types for recurring financial relationships:
+
+- **Subscriptions** — fixed recurring payments (daily/weekly/monthly). Settled via `settleDueAgreements()`.
+- **Usage-based billing** — metered consumption. Agents `reportUsage()`, settlement sums unsettled records and charges `quantity * rate`.
+- **Retainers** — upfront escrow transferred immediately on creation. Cancellation refunds remaining balance.
+
+Schema: `agreements` table (payer, payee, type, amount, unit, interval, nextDueAt, status) + `usage_records` table (agreementId, quantity, settledAt). All settlements go through `sendPayment` so policies are enforced.
+
+Exposed via API (`/api/agreements/`), CLI (`agent-pay agreement`), SDK (`FlowbitClient`), and MCP tools.
+
+### Agent Economy Simulation (Implemented)
+
+100-agent simulation at `apps/simulation/` demonstrating the full financial system:
+
+- 20 professions with interdependent service needs
+- Rule-based agents with conservative/moderate/aggressive risk profiles
+- Each agent starts with 1000 USDC in a closed 100,000 USDC economy
+- Agents buy food, pay housing, hire each other, form subscriptions and usage agreements
+- Dashboard with force-directed graph, SSE event feed, and live leaderboard
+- Runs 100 simulated years at configurable speed (1x to 100x)
+
 ## Future Phases
-
-### Phase 2: Agreements
-
-Recurring financial relationships between agents:
-- **Subscriptions** — fixed recurring payments on a schedule
-- **Usage-based billing** — metered consumption with periodic settlement
-- **Retainers** — prepaid balances drawn down over time
-
-Data model: an `agreements` table with payer, payee, type, rate, unit, interval, status. A settlement worker (cron) processes due agreements.
 
 ### Phase 3: On-Chain Settlement
 

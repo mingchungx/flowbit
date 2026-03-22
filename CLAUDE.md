@@ -8,7 +8,8 @@ Flowbit is a programmable financial layer for autonomous agents. It lets agents 
 
 ```
 flowbit/
-├── apps/web/            # Next.js 16 (App Router) — API server + future frontend
+├── apps/web/            # Next.js 16 — API server + monitoring dashboard (:3000)
+├── apps/simulation/     # Next.js 16 — agent economy simulation (:3001)
 ├── packages/cli/        # `agent-pay` CLI (Commander.js, hits the API)
 ├── packages/sdk/        # TypeScript client + agent tool schemas
 ├── packages/mcp/        # MCP server (stdio transport, wraps SDK)
@@ -32,7 +33,8 @@ Monorepo managed by **pnpm workspaces**. The workspace root is `pnpm-workspace.y
 ```bash
 docker compose up -d     # Postgres
 pnpm db:push             # Push schema
-pnpm dev                 # Start Next.js at :3000
+pnpm dev                 # Start main app at :3000
+pnpm sim:dev             # Start simulation at :3001
 pnpm test                # Run tests (needs Postgres)
 ```
 
@@ -64,7 +66,13 @@ pnpm test                # Run tests (needs Postgres)
 | CLI source | `packages/cli/src/` |
 | SDK source | `packages/sdk/src/` |
 | MCP server | `packages/mcp/src/index.ts` |
+| Agreements engine | `apps/web/src/lib/core/agreements.ts` |
+| Dashboard components | `apps/web/src/components/dashboard/` |
+| Dashboard API routes | `apps/web/src/app/api/dashboard/` |
 | Deploy script | `apps/web/scripts/deploy-test-usdc.ts` |
+| Simulation engine | `apps/simulation/src/lib/engine/` |
+| Simulation dashboard | `apps/simulation/src/components/` |
+| Simulation API | `apps/simulation/src/app/api/simulation/` |
 
 ## How to make changes
 
@@ -97,7 +105,7 @@ pnpm test                # Run tests (needs Postgres)
   refactor(core): extract policy evaluation into pipeline
   ```
 - Allowed prefixes: `feat`, `fix`, `chore`, `perf`, `test`, `refactor`, `docs`
-- Scopes: `web`, `cli`, `sdk`, `mcp`, `core`, `chain`, `db`, or omit for repo-wide changes
+- Scopes: `web`, `cli`, `sdk`, `mcp`, `core`, `chain`, `db`, `simulation`, or omit for repo-wide changes
 - Keep the description short (under 72 chars). Use the commit body for detail if needed.
 
 ## Testing conventions

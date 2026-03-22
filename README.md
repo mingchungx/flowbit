@@ -129,6 +129,18 @@ pnpm agent-pay policy add --wallet <id> --type max_per_tx --params '{"max": 25}'
 pnpm agent-pay policy list <wallet-id>
 ```
 
+```bash
+# Agreements
+pnpm agent-pay agreement create --payer <id> --payee <id> --type subscription --amount 10 --interval monthly
+pnpm agent-pay agreement create --payer <id> --payee <id> --type usage --amount 0.01 --unit api_call --interval daily
+pnpm agent-pay agreement get <agreement-id>
+pnpm agent-pay agreement list [--wallet <id>] [--type <type>] [--status <status>]
+pnpm agent-pay agreement cancel <agreement-id>
+pnpm agent-pay agreement usage <agreement-id> --quantity 150
+pnpm agent-pay agreement settle <agreement-id>
+pnpm agent-pay agreement settle-all
+```
+
 All commands output JSON. Set `FLOWBIT_API_URL` to point at a different server.
 
 ### 3. TypeScript SDK
@@ -191,7 +203,7 @@ Add to your Claude Code config (`~/.claude/settings.json`):
 }
 ```
 
-The agent then sees these tools: `create_wallet`, `get_wallet`, `list_wallets`, `fund_wallet`, `send_payment`, `get_transactions`, `add_spending_policy`, `list_policies`.
+The agent then sees these tools: `create_wallet`, `get_wallet`, `list_wallets`, `fund_wallet`, `send_payment`, `get_transactions`, `add_spending_policy`, `list_policies`, `create_agreement`, `get_agreement`, `list_agreements`, `cancel_agreement`, `report_usage`, `settle_agreement`, `settle_all_due`.
 
 ## On-Chain Integration (Base Sepolia)
 
@@ -228,6 +240,12 @@ With these set, `fund` mints real testnet tUSDC on-chain to the wallet's address
 | `/api/wallets/:id/onchain` | `GET` | Compare ledger vs on-chain balance |
 | `/api/send` | `POST` | Execute a payment |
 | `/api/transactions` | `GET` | Transaction log (requires `wallet_id` param) |
+| `/api/agreements` | `GET, POST` | List/create agreements |
+| `/api/agreements/:id` | `GET` | Get agreement details |
+| `/api/agreements/:id/cancel` | `POST` | Cancel an agreement |
+| `/api/agreements/:id/usage` | `POST` | Report metered usage |
+| `/api/agreements/:id/settle` | `POST` | Settle a specific agreement |
+| `/api/agreements/settle` | `POST` | Settle all due agreements |
 
 ## Testing
 
@@ -236,21 +254,43 @@ With these set, `fund` mints real testnet tUSDC on-chain to the wallet's address
 pnpm test
 ```
 
-Tests run against real Postgres, not mocks. They cover wallet CRUD, double-entry ledger, idempotent payments, and policy enforcement.
+35 tests run against real Postgres (not mocks) covering wallet CRUD, double-entry ledger, idempotent payments, policy enforcement, and all three agreement types (subscription, usage, retainer).
 
 ## Project Structure
 
 ```
 flowbit/
-├── apps/web/                  # Next.js app (API + future frontend)
+├── apps/web/                  # Next.js app (API + monitoring dashboard)
 │   ├── src/app/api/           # Route handlers
-│   ├── src/lib/core/          # Ledger, policy engine
+│   ├── src/components/        # Dashboard UI components
+│   ├── src/lib/core/          # Ledger, policy engine, agreements
 │   ├── src/lib/db/            # Drizzle schema, connection
 │   ├── src/lib/chain/         # viem, on-chain operations
 │   └── scripts/               # Deploy scripts
+├── apps/simulation/           # Agent economy simulation (port 3001)
+│   ├── src/app/api/           # Simulation control + SSE events
+│   ├── src/components/        # Graph, feed, leaderboard UI
+│   └── src/lib/engine/        # 100-agent simulation engine
 ├── packages/cli/              # agent-pay CLI
 ├── packages/sdk/              # TypeScript SDK + tool definitions
 ├── packages/mcp/              # MCP server for agent frameworks
 ├── contracts/                 # Solidity (TestUSDC)
 └── docs/                      # Design documents
 ```
+
+## Agent Economy Simulation
+
+Run a 100-agent economy simulation to observe emergent financial behavior:
+
+```bash
+# Start both apps (requires Postgres running)
+pnpm dev          # Main API + dashboard on :3000
+pnpm sim:dev      # Simulation dashboard on :3001
+```
+
+Open http://localhost:3001, click **init** then **start**. 100 agents with different professions and risk profiles will begin trading, forming subscriptions, and competing for wealth over 100 simulated years.
+
+- **Left panel**: force-directed graph showing agent relationships
+- **Right top**: live event feed (SSE-powered)
+- **Right bottom**: leaderboard sorted by balance
+- **Top bar**: year/day progress, speed controls (1x to 100x)
