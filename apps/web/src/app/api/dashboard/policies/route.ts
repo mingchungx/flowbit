@@ -1,12 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { policies, wallets } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { requireAuth, handleAuthError } from "@/lib/core/auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    await requireAuth(request, { scope: "admin" });
+
     const walletLookup = db
       .select({ id: wallets.id, name: wallets.name })
       .from(wallets)
@@ -28,6 +31,8 @@ export async function GET() {
 
     return NextResponse.json(result);
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

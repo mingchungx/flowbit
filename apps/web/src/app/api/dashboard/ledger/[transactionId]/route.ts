@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { transactions, ledgerEntries, wallets } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { requireAuth, handleAuthError } from "@/lib/core/auth";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ transactionId: string }> }
 ) {
   try {
+    await requireAuth(request, { scope: "admin" });
+
     const { transactionId } = await params;
 
     const [tx] = await db
@@ -53,6 +56,8 @@ export async function GET(
       entries,
     });
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

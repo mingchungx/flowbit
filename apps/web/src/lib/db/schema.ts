@@ -11,6 +11,19 @@ import {
   text,
 } from "drizzle-orm/pg-core";
 
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    keyHash: varchar("key_hash", { length: 64 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    scope: varchar("scope", { length: 10 }).notNull(), // "agent" or "admin"
+    revokedAt: timestamp("revoked_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex("api_keys_hash_idx").on(table.keyHash)]
+);
+
 export const wallets = pgTable(
   "wallets",
   {
@@ -18,6 +31,7 @@ export const wallets = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     address: varchar("address", { length: 42 }).notNull(),
     privateKey: text("private_key").notNull(),
+    ownerKeyId: uuid("owner_key_id").references(() => apiKeys.id),
     currency: varchar("currency", { length: 10 }).notNull().default("USDC"),
     balance: decimal("balance", { precision: 18, scale: 6 })
       .notNull()
@@ -28,6 +42,7 @@ export const wallets = pgTable(
   (table) => [
     index("wallets_created_at_idx").on(table.createdAt),
     uniqueIndex("wallets_address_idx").on(table.address),
+    index("wallets_owner_key_idx").on(table.ownerKeyId),
   ]
 );
 

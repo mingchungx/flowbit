@@ -31,14 +31,15 @@ Monorepo managed by **pnpm workspaces**. The workspace root is `pnpm-workspace.y
 ## How to run
 
 ```bash
-docker compose up -d     # Postgres
-pnpm db:push             # Push schema
-pnpm dev                 # Start main app at :3000
-pnpm sim:dev             # Start simulation at :3001
-pnpm test                # Run tests (needs Postgres)
-pnpm typecheck           # Typecheck all apps + packages
-pnpm lint                # ESLint with autofix (web)
-pnpm lint:check          # ESLint without fix (CI)
+docker compose up -d          # Postgres
+pnpm db:push                  # Push schema
+pnpm db:create-admin-key      # Create first admin API key
+pnpm dev                      # Start main app at :3000
+pnpm sim:dev                  # Start simulation at :3001
+pnpm test                     # Run tests (needs Postgres)
+pnpm typecheck                # Typecheck all apps + packages
+pnpm lint                     # ESLint with autofix (web)
+pnpm lint:check               # ESLint without fix (CI)
 ```
 
 Pre-commit hook (Husky) runs `lint-staged` which typechecks any changed package automatically.
@@ -55,7 +56,13 @@ Pre-commit hook (Husky) runs `lint-staged` which typechecks any changed package 
 
 **On-chain is optional.** The system works fully off-chain. When `TEST_USDC_ADDRESS` and `DEPLOYER_PRIVATE_KEY` env vars are set, funding mints real testnet USDC. Payments stay off-chain; settlement is a future phase.
 
-**Private keys are internal.** The `privateKey` column exists in the DB but is never returned by the API. All public-facing queries use explicit column selection that excludes it.
+**API key authentication.** Every API request requires `Authorization: Bearer <key>`. Keys are SHA-256 hashed before storage. Two scopes: `agent` (wallet-scoped access) and `admin` (full read, dashboard access). Bootstrap with `pnpm db:create-admin-key`. Create further keys via `POST /api/admin/keys`.
+
+**Wallet ownership.** Each wallet is bound to the API key that created it via `owner_key_id`. Agents can only access their own wallets. Admins can read all wallets but don't own any.
+
+**Private keys are encrypted.** When `KEY_ENCRYPTION_SECRET` is set, private keys are encrypted with AES-256-GCM before storage. The column is never returned by the API.
+
+**Rate limiting.** Per-API-key (100 req/s) and per-IP (20 req/s) sliding window limiters. In-memory — resets on restart.
 
 ## Where to find things
 
@@ -63,10 +70,16 @@ Pre-commit hook (Husky) runs `lint-staged` which typechecks any changed package 
 |------|-------|
 | DB schema | `apps/web/src/lib/db/schema.ts` |
 | DB connection | `apps/web/src/lib/db/index.ts` |
+| Auth + API keys | `apps/web/src/lib/core/auth.ts` |
+| Rate limiting | `apps/web/src/lib/core/rate-limit.ts` |
 | Ledger + wallet ops | `apps/web/src/lib/core/ledger.ts` |
 | Policy engine | `apps/web/src/lib/core/policies.ts` |
+| Key encryption | `apps/web/src/lib/crypto/keys.ts` |
+| Structured logger | `apps/web/src/lib/logger.ts` |
 | Chain integration | `apps/web/src/lib/chain/` |
 | API routes | `apps/web/src/app/api/` |
+| Admin key API | `apps/web/src/app/api/admin/keys/route.ts` |
+| Health check | `apps/web/src/app/api/health/route.ts` |
 | Tests | `apps/web/src/lib/core/__tests__/` |
 | CLI source | `packages/cli/src/` |
 | SDK source | `packages/sdk/src/` |
@@ -74,6 +87,7 @@ Pre-commit hook (Husky) runs `lint-staged` which typechecks any changed package 
 | Agreements engine | `apps/web/src/lib/core/agreements.ts` |
 | Dashboard components | `apps/web/src/components/dashboard/` |
 | Dashboard API routes | `apps/web/src/app/api/dashboard/` |
+| Bootstrap script | `apps/web/scripts/create-admin-key.ts` |
 | Deploy script | `apps/web/scripts/deploy-test-usdc.ts` |
 | Simulation engine | `apps/simulation/src/lib/engine/` |
 | Simulation dashboard | `apps/simulation/src/components/` |
@@ -81,7 +95,7 @@ Pre-commit hook (Husky) runs `lint-staged` which typechecks any changed package 
 
 ## How to make changes
 
-**Adding a new API endpoint:** Create a `route.ts` in the appropriate `apps/web/src/app/api/` directory. Follow the pattern of existing routes — validate input, call core functions, return appropriate HTTP status codes.
+**Adding a new API endpoint:** Create a `route.ts` in the appropriate `apps/web/src/app/api/` directory. Follow the pattern of existing routes — call `requireAuth(request)` first, validate input, call core functions, handle auth errors with `handleAuthError()`, return appropriate HTTP status codes. Dashboard routes require `{ scope: "admin" }`. Use `assertWalletOwnership()` for wallet-specific operations.
 
 **Adding a new policy type:** Add the check function in `policies.ts`, add the case to the switch in `evaluatePolicies`, add param validation in the policies API route handler.
 
@@ -154,7 +168,10 @@ Files to check on every change:
 | Var | Required | Where | Purpose |
 |-----|----------|-------|---------|
 | `DATABASE_URL` | Yes | `apps/web/.env.local` | Postgres connection |
+| `KEY_ENCRYPTION_SECRET` | Prod | `apps/web/.env.local` | AES-256-GCM master key for private key encryption |
+| `LOG_LEVEL` | No | `apps/web/.env.local` | Logging level: debug, info, warn, error (default: info) |
 | `DEPLOYER_PRIVATE_KEY` | No | `apps/web/.env.local` | On-chain minting |
 | `TEST_USDC_ADDRESS` | No | `apps/web/.env.local` | TestUSDC contract address |
 | `BASE_SEPOLIA_RPC_URL` | No | `apps/web/.env.local` | Base Sepolia RPC (defaults to public) |
 | `FLOWBIT_API_URL` | No | CLI/MCP env | API base URL (defaults to localhost:3000) |
+| `FLOWBIT_API_KEY` | Yes | CLI/MCP env | API key for authentication |

@@ -7,6 +7,7 @@ import {
   policies,
   agreements,
   usageRecords,
+  apiKeys,
 } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
 import {
@@ -48,6 +49,7 @@ beforeEach(async () => {
   await db.delete(transactions);
   await db.delete(policies);
   await db.delete(wallets);
+  await db.delete(apiKeys);
 });
 
 // ── Subscription ──

@@ -81,13 +81,14 @@ Adding a new policy type requires:
 
 ### Security Model
 
-- **Private keys are never exposed.** All API queries use explicit column selection that excludes `private_key`. The key exists only in the DB for custodial signing.
+- **API key authentication.** Every request requires a `Bearer` token. Keys are hashed (SHA-256) before storage. Two scopes: `agent` (wallet-scoped) and `admin` (full read access).
+- **Wallet ownership.** Each wallet is bound to the API key that created it. Agents can only access their own wallets; admins can read all.
+- **Private keys are never exposed.** All API queries use explicit column selection that excludes `private_key`. Keys are encrypted at rest with AES-256-GCM when `KEY_ENCRYPTION_SECRET` is set.
 - **Input validation** at the API layer — types, ranges, and required fields are checked before reaching core logic.
 - **Policy enforcement** is mandatory — there is no bypass. Every `sendPayment` call goes through `evaluatePolicies`.
 - **Atomic balance updates** — balances are modified inside Postgres transactions with row locks. No race conditions.
 - **Idempotency prevents double-spend** from retries.
-
-Note: This is testnet infrastructure. For production, private keys would need HSM/KMS-backed storage, and the system would need API key authentication, rate limiting, and encryption at rest.
+- **Rate limiting.** Per-API-key (100 req/s) and per-IP (20 req/s) sliding window limiters prevent abuse.
 
 ## Integration Surfaces
 

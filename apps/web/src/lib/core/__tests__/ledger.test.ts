@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { db } from "@/lib/db";
-import { wallets, transactions, ledgerEntries, policies, usageRecords, agreements } from "@/lib/db/schema";
+import { wallets, transactions, ledgerEntries, policies, usageRecords, agreements, apiKeys } from "@/lib/db/schema";
 import {
   createWallet,
   getWallet,
@@ -21,6 +21,7 @@ beforeEach(async () => {
   await db.delete(transactions);
   await db.delete(policies);
   await db.delete(wallets);
+  await db.delete(apiKeys);
 });
 
 // ── Wallet CRUD ──

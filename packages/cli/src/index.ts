@@ -4,7 +4,10 @@ import { Command } from "commander";
 import { FlowbitClient } from "./client.js";
 
 const program = new Command();
-const client = new FlowbitClient(process.env.FLOWBIT_API_URL);
+const client = new FlowbitClient(
+  process.env.FLOWBIT_API_URL,
+  process.env.FLOWBIT_API_KEY
+);
 
 function output(data: unknown, format: string) {
   if (format === "json") {

@@ -3,6 +3,8 @@ import { wallets, transactions, ledgerEntries } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { evaluatePolicies } from "./policies";
 import { generateWalletKeypair, mintTestUsdc } from "@/lib/chain";
+import { encryptPrivateKey } from "@/lib/crypto/keys";
+import { logger } from "@/lib/logger";
 
 export class InsufficientFundsError extends Error {
   constructor(walletId: string, balance: string, amount: number) {
@@ -36,13 +38,16 @@ export class DuplicateTransactionError extends Error {
   }
 }
 
-export async function createWallet(name: string) {
+export async function createWallet(name: string, ownerKeyId?: string) {
   // Generate a real blockchain keypair
   const { address, privateKey } = generateWalletKeypair();
 
+  // Encrypt private key before storage
+  const storedKey = encryptPrivateKey(privateKey);
+
   const [wallet] = await db
     .insert(wallets)
-    .values({ name, address, privateKey })
+    .values({ name, address, privateKey: storedKey, ownerKeyId: ownerKeyId || null })
     .returning({
       id: wallets.id,
       name: wallets.name,
@@ -52,6 +57,8 @@ export async function createWallet(name: string) {
       createdAt: wallets.createdAt,
       updatedAt: wallets.updatedAt,
     });
+
+  logger.info("Wallet created", { walletId: wallet.id, name });
   return wallet;
 }
 
@@ -72,8 +79,8 @@ export async function getWallet(id: string) {
   return wallet;
 }
 
-export async function listWallets() {
-  return db
+export async function listWallets(ownerKeyId?: string) {
+  const query = db
     .select({
       id: wallets.id,
       name: wallets.name,
@@ -84,7 +91,13 @@ export async function listWallets() {
       updatedAt: wallets.updatedAt,
     })
     .from(wallets)
-    .orderBy(wallets.createdAt);
+    .orderBy(wallets.createdAt)
+    .$dynamic();
+
+  if (ownerKeyId) {
+    return query.where(eq(wallets.ownerKeyId, ownerKeyId));
+  }
+  return query;
 }
 
 /**
@@ -161,6 +174,13 @@ export async function fundWallet(
         updatedAt: new Date(),
       })
       .where(eq(wallets.id, walletId));
+
+    logger.info("Wallet funded", {
+      walletId,
+      amount,
+      transactionId: txRecord.id,
+      onChain: !!txHash,
+    });
 
     return txRecord;
   });
@@ -274,6 +294,13 @@ export async function sendPayment(params: {
         updatedAt: new Date(),
       })
       .where(eq(wallets.id, to));
+
+    logger.info("Payment sent", {
+      from,
+      to,
+      amount,
+      transactionId: txRecord.id,
+    });
 
     return txRecord;
   });

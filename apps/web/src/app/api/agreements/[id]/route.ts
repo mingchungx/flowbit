@@ -3,16 +3,20 @@ import {
   getAgreement,
   AgreementNotFoundError,
 } from "@/lib/core/agreements";
+import { requireAuth, handleAuthError } from "@/lib/core/auth";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAuth(request);
     const { id } = await params;
     const agreement = await getAgreement(id);
     return NextResponse.json(agreement);
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     if (error instanceof AgreementNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }

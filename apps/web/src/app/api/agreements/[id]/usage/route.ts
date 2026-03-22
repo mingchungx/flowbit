@@ -4,12 +4,14 @@ import {
   AgreementNotFoundError,
   InvalidAgreementError,
 } from "@/lib/core/agreements";
+import { requireAuth, handleAuthError } from "@/lib/core/auth";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAuth(request);
     const { id } = await params;
     const body = await request.json();
     const { quantity } = body;
@@ -24,6 +26,8 @@ export async function POST(
     const record = await reportUsage(id, quantity);
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     if (error instanceof AgreementNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }

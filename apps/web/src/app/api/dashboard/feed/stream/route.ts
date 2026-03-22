@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { transactions, wallets } from "@/lib/db/schema";
 import { gt, desc, eq, sql, and } from "drizzle-orm";
+import { requireAuth, handleAuthError } from "@/lib/core/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -71,6 +72,18 @@ function formatRow(row: {
 }
 
 export async function GET(request: NextRequest) {
+  // Authenticate before opening the stream
+  try {
+    await requireAuth(request, { scope: "admin" });
+  } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const walletId = request.nextUrl.searchParams.get("wallet_id");
 
   const encoder = new TextEncoder();
@@ -81,14 +94,12 @@ export async function GET(request: NextRequest) {
       let cursor = new Date();
       const sentIds = new Set<string>();
 
-      // Poll every 2 seconds and push new transactions as SSE events
       const poll = async () => {
         if (cancelled) return;
 
         try {
           const rows = await buildQuery(walletId, cursor);
           if (rows.length > 0) {
-            // Update cursor to newest
             cursor = rows[0].createdAt;
 
             for (const row of rows.reverse()) {
@@ -100,7 +111,6 @@ export async function GET(request: NextRequest) {
               );
             }
 
-            // Keep sentIds bounded
             if (sentIds.size > 1000) {
               const arr = Array.from(sentIds);
               for (let i = 0; i < arr.length - 500; i++) {
@@ -109,7 +119,7 @@ export async function GET(request: NextRequest) {
             }
           }
         } catch {
-          // DB error — skip this tick, try next
+          // DB error — skip this tick
         }
 
         if (!cancelled) {
@@ -117,7 +127,6 @@ export async function GET(request: NextRequest) {
         }
       };
 
-      // Send initial keepalive
       controller.enqueue(encoder.encode(`: connected\n\n`));
       poll();
     },

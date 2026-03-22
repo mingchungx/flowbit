@@ -6,10 +6,13 @@ import {
   WalletNotFoundError,
   DuplicateTransactionError,
 } from "@/lib/core/ledger";
+import { requireAuth, assertWalletOwnership, handleAuthError } from "@/lib/core/auth";
 import { randomUUID } from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth(request);
+
     const body = await request.json();
     const { from, to, amount, idempotency_key, memo } = body;
 
@@ -34,6 +37,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Only the owner of the source wallet can send from it
+    await assertWalletOwnership(from, auth);
+
     const key = idempotency_key || randomUUID();
 
     const tx = await sendPayment({
@@ -46,6 +52,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(tx, { status: 201 });
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     if (error instanceof WalletNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }

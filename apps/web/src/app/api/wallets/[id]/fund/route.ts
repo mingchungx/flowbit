@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fundWallet, WalletNotFoundError } from "@/lib/core/ledger";
+import { requireAuth, assertWalletOwnership, handleAuthError } from "@/lib/core/auth";
 import { randomUUID } from "crypto";
 
 export async function POST(
@@ -7,7 +8,10 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAuth(request);
     const { id } = await params;
+    await assertWalletOwnership(id, auth);
+
     const body = await request.json();
     const { amount, idempotency_key } = body;
 
@@ -22,6 +26,8 @@ export async function POST(
     const tx = await fundWallet(id, amount, key);
     return NextResponse.json(tx, { status: 201 });
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     if (error instanceof WalletNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }

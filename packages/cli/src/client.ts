@@ -2,22 +2,28 @@ const DEFAULT_BASE_URL = "http://localhost:3000";
 
 export class FlowbitClient {
   private baseUrl: string;
+  private apiKey?: string;
 
-  constructor(baseUrl?: string) {
+  constructor(baseUrl?: string, apiKey?: string) {
     this.baseUrl = (baseUrl || DEFAULT_BASE_URL).replace(/\/$/, "");
+    this.apiKey = apiKey;
   }
 
   private async request<T>(
     path: string,
     options: RequestInit = {}
   ): Promise<T> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (this.apiKey) {
+      headers["Authorization"] = `Bearer ${this.apiKey}`;
+    }
+
     const url = `${this.baseUrl}${path}`;
     const res = await fetch(url, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+      headers: { ...headers, ...(options.headers as Record<string, string>) },
     });
 
     const body = await res.json();

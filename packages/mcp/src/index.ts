@@ -6,7 +6,8 @@ import { z } from "zod";
 import { FlowbitClient } from "@flowbit/sdk";
 
 const baseUrl = process.env.FLOWBIT_API_URL || "http://localhost:3000";
-const client = new FlowbitClient({ baseUrl });
+const apiKey = process.env.FLOWBIT_API_KEY;
+const client = new FlowbitClient({ baseUrl, apiKey });
 
 const server = new McpServer({
   name: "flowbit",

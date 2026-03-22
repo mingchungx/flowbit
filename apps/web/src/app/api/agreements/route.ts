@@ -8,9 +8,12 @@ import {
   WalletNotFoundError,
   InsufficientFundsError,
 } from "@/lib/core/ledger";
+import { requireAuth, assertWalletOwnership, handleAuthError } from "@/lib/core/auth";
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth(request);
+
     const body = await request.json();
     const { payer_wallet_id, payee_wallet_id, type, amount, unit, interval, metadata } = body;
 
@@ -56,6 +59,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Payer wallet must belong to the caller
+    await assertWalletOwnership(payer_wallet_id, auth);
+
     const agreement = await createAgreement({
       payerWalletId: payer_wallet_id,
       payeeWalletId: payee_wallet_id,
@@ -68,6 +74,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(agreement, { status: 201 });
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     if (error instanceof InvalidAgreementError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
@@ -86,6 +94,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    await requireAuth(request);
+
     const { searchParams } = new URL(request.url);
     const wallet_id = searchParams.get("wallet_id") || undefined;
     const type = searchParams.get("type") || undefined;
@@ -99,6 +109,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

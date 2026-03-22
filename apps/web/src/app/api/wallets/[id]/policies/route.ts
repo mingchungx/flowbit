@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { policies } from "@/lib/db/schema";
 import { getWallet, WalletNotFoundError } from "@/lib/core/ledger";
+import { requireAuth, assertWalletOwnership, handleAuthError } from "@/lib/core/auth";
 import { eq, and } from "drizzle-orm";
 import type { PolicyType, PolicyParams } from "@/lib/core/policies";
 
@@ -48,7 +49,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAuth(request);
     const { id } = await params;
+    await assertWalletOwnership(id, auth);
     await getWallet(id);
 
     const body = await request.json();
@@ -84,6 +87,8 @@ export async function POST(
 
     return NextResponse.json(policy, { status: 201 });
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     if (error instanceof WalletNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
@@ -95,11 +100,13 @@ export async function POST(
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAuth(request);
     const { id } = await params;
+    await assertWalletOwnership(id, auth);
     await getWallet(id);
 
     const result = await db
@@ -109,6 +116,8 @@ export async function GET(
 
     return NextResponse.json(result);
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     if (error instanceof WalletNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }

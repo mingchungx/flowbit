@@ -1,12 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { wallets, transactions, policies } from "@/lib/db/schema";
 import { sql, gte, eq } from "drizzle-orm";
+import { requireAuth, handleAuthError } from "@/lib/core/auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    await requireAuth(request, { scope: "admin" });
+
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -54,6 +57,8 @@ export async function GET() {
       lastActivityAt: lastActivity.lastActivityAt,
     });
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { transactions, wallets } from "@/lib/db/schema";
 import { sql, lt, desc, eq, and } from "drizzle-orm";
+import { requireAuth, handleAuthError } from "@/lib/core/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -9,14 +10,16 @@ export const dynamic = "force-dynamic";
  * Cursor-based paginated feed for loading transaction history.
  *
  * Query params:
- *   before  — ISO timestamp cursor (load transactions older than this)
- *   limit   — page size (default 50, max 200)
- *   wallet_id — optional filter
+ *   before  -- ISO timestamp cursor (load transactions older than this)
+ *   limit   -- page size (default 50, max 200)
+ *   wallet_id -- optional filter
  *
  * Returns { transactions, nextCursor } where nextCursor is null if no more pages.
  */
 export async function GET(request: NextRequest) {
   try {
+    await requireAuth(request, { scope: "admin" });
+
     const before = request.nextUrl.searchParams.get("before");
     const walletId = request.nextUrl.searchParams.get("wallet_id");
     const limit = Math.min(
@@ -60,7 +63,7 @@ export async function GET(request: NextRequest) {
       .leftJoin(fromWallet, eq(transactions.fromWalletId, fromWallet.id))
       .innerJoin(toWallet, eq(transactions.toWalletId, toWallet.id))
       .orderBy(desc(transactions.createdAt))
-      .limit(limit + 1) // fetch one extra to know if there's a next page
+      .limit(limit + 1)
       .$dynamic();
 
     if (conditions.length > 0) {
@@ -93,6 +96,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ transactions: result, nextCursor });
   } catch (error) {
+    const authResp = handleAuthError(error);
+    if (authResp) return authResp;
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
