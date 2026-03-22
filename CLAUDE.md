@@ -80,6 +80,22 @@ pnpm test                # Run tests (needs Postgres)
 
 **After changes to CLI/SDK/MCP:** These are compiled TypeScript packages. Rebuild before testing: `pnpm --filter <package> build`.
 
+## Git rules
+
+- **NEVER push to remote.** You may `git add` and `git commit` freely, but never run `git push`.
+- Commit messages follow **conventional commits** with a scope indicating the module:
+  ```
+  feat(web): add agreement settlement endpoint
+  fix(cli): handle missing wallet ID gracefully
+  chore(sdk): bump viem dependency
+  perf(web): add index on ledger_entries.created_at
+  test(web): add daily_limit policy edge cases
+  refactor(core): extract policy evaluation into pipeline
+  ```
+- Allowed prefixes: `feat`, `fix`, `chore`, `perf`, `test`, `refactor`, `docs`
+- Scopes: `web`, `cli`, `sdk`, `mcp`, `core`, `chain`, `db`, or omit for repo-wide changes
+- Keep the description short (under 72 chars). Use the commit body for detail if needed.
+
 ## Testing conventions
 
 - Tests are integration tests against real Postgres (not mocks)
