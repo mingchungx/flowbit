@@ -1,36 +1,34 @@
 # TODO: Rate Limiting & Abuse Prevention
 
-## Status: Not started
+## Status: Partial (request rate limiting done)
 
-## Problem
-
-No rate limiting, no abuse prevention. A single client can hammer the API with unlimited requests, create unlimited wallets, or attempt to drain funds via rapid-fire payments.
-
-## Requirements
+## Completed
 
 ### Request Rate Limiting
-- Per-API-key rate limits (e.g., 100 requests/second, 10,000/hour)
-- Per-IP rate limits for unauthenticated endpoints
-- Return `429 Too Many Requests` with `Retry-After` header
-- Use sliding window or token bucket algorithm
+- [x] Per-API-key rate limiter: 100 requests/second (sliding window)
+- [x] Per-IP rate limiter for unauthenticated endpoints: 20 requests/second
+- [x] Rate limit enforced during authentication (auth.ts)
+- [x] In-memory implementation with automatic cleanup of expired entries
+- [x] Returns 401 with retry-after message when exceeded
+
+## Remaining
 
 ### Financial Rate Limiting
-- Max wallets per API key (e.g., 100)
-- Max transactions per wallet per hour
-- Max total volume per API key per day
-- These are separate from request rate limits — a request can succeed (200) but the financial operation can be rejected (429)
+- [ ] Max wallets per API key (e.g., 100)
+- [ ] Max transactions per wallet per hour
+- [ ] Max total volume per API key per day
+- [ ] These should be separate from request rate limits
 
-### Implementation Options
-- **In-memory**: Simple Map with timestamps. Works for single-server. Resets on restart.
-- **Redis/Valkey**: Persistent, works across multiple server instances. Use `INCR` + `EXPIRE`.
-- **Upstash**: Serverless Redis, works well with Vercel/serverless deploys.
+### Persistent Rate Limiting
+- [ ] Redis/Valkey backend for multi-server deployments
+- [ ] Upstash for serverless environments
+- [ ] Currently in-memory — resets on server restart
 
 ### DDoS Protection
-- Put Cloudflare or similar in front of the API
-- Challenge suspicious traffic before it reaches the app
+- [ ] Cloudflare or similar CDN/WAF in front of the API
+- [ ] Challenge suspicious traffic before it reaches the app
 
-## Files to Change
+## Files Changed
 
-- New: `apps/web/src/lib/core/rate-limit.ts` — rate limiter implementation
-- All API routes — add rate limit check (ideally as middleware)
-- `docker-compose.yml` — add Redis if going that route
+- `apps/web/src/lib/core/rate-limit.ts` — sliding window rate limiter
+- `apps/web/src/lib/core/auth.ts` — integrates rate limiting with auth
