@@ -83,6 +83,7 @@ pnpm test                # Run tests (needs Postgres)
 ## Git rules
 
 - **NEVER push to remote.** You may `git add` and `git commit` freely, but never run `git push`.
+- **NEVER amend commits.** Always create a new commit. No `git commit --amend`.
 - Commit messages follow **conventional commits** with a scope indicating the module:
   ```
   feat(web): add agreement settlement endpoint
