@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# @flowbit/web
 
-## Getting Started
+Next.js 16 application that serves the Flowbit API and will eventually host the frontend dashboard.
 
-First, run the development server:
+## What's here
+
+- **API routes** (`src/app/api/`) — REST endpoints for wallets, payments, policies, transactions
+- **Core engine** (`src/lib/core/`) — double-entry ledger, policy engine, wallet operations
+- **DB layer** (`src/lib/db/`) — Drizzle ORM schema and Postgres connection
+- **Chain layer** (`src/lib/chain/`) — viem integration for Base Sepolia (keypair generation, TestUSDC minting)
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# From repo root
+docker compose up -d   # Start Postgres
+pnpm db:push           # Push schema
+pnpm dev               # Start dev server at :3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## API Endpoints
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/wallets` | `GET` | List all wallets |
+| `/api/wallets` | `POST` | Create a wallet `{ name }` |
+| `/api/wallets/:id` | `GET` | Get wallet details |
+| `/api/wallets/:id/fund` | `POST` | Fund with testnet USDC `{ amount }` |
+| `/api/wallets/:id/policies` | `GET` | List active policies |
+| `/api/wallets/:id/policies` | `POST` | Add a policy `{ type, params }` |
+| `/api/wallets/:id/onchain` | `GET` | Ledger vs on-chain balance |
+| `/api/send` | `POST` | Send payment `{ from, to, amount, idempotency_key }` |
+| `/api/transactions` | `GET` | Transaction log `?wallet_id=` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+```bash
+pnpm dev              # Start dev server
+pnpm build            # Production build
+pnpm test             # Run integration tests
+pnpm test:watch       # Watch mode
+pnpm db:push          # Push schema to Postgres
+pnpm db:generate      # Generate migration files
+pnpm db:studio        # Open Drizzle Studio
+pnpm deploy:usdc      # Deploy TestUSDC to Base Sepolia
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Environment Variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Copy `.env.example` to `.env.local`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+DATABASE_URL=postgres://flowbit:flowbit@localhost:5432/flowbit
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Optional — on-chain integration
+DEPLOYER_PRIVATE_KEY=0x...
+TEST_USDC_ADDRESS=0x...
+BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+```
