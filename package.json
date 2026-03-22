@@ -4,7 +4,9 @@
   "scripts": {
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
-    "lint": "pnpm --filter web lint",
+    "lint": "pnpm --filter web exec eslint --fix src/",
+    "lint:check": "pnpm --filter web exec eslint src/",
+    "typecheck": "pnpm --filter web exec tsc --noEmit && pnpm --filter simulation exec tsc --noEmit && pnpm --filter @flowbit/sdk exec tsc --noEmit && pnpm --filter @flowbit/cli exec tsc --noEmit && pnpm --filter @flowbit/mcp exec tsc --noEmit",
     "db:check": "pnpm --filter web db:check",
     "db:drop": "pnpm --filter web db:drop",
     "db:gen": "pnpm --filter web db:gen",
@@ -15,6 +17,28 @@
     "flowbit": "node packages/cli/dist/index.js",
     "test": "pnpm --filter web test",
     "sim:dev": "pnpm --filter simulation dev",
-    "sim:build": "pnpm --filter simulation build"
+    "sim:build": "pnpm --filter simulation build",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
+  },
+  "lint-staged": {
+    "apps/web/src/**/*.{ts,tsx}": [
+      "bash -c 'cd apps/web && npx eslint --fix src/ && npx tsc --noEmit'"
+    ],
+    "apps/simulation/src/**/*.{ts,tsx}": [
+      "bash -c 'cd apps/simulation && npx tsc --noEmit'"
+    ],
+    "packages/sdk/src/**/*.ts": [
+      "bash -c 'cd packages/sdk && npx tsc --noEmit'"
+    ],
+    "packages/cli/src/**/*.ts": [
+      "bash -c 'cd packages/cli && npx tsc --noEmit'"
+    ],
+    "packages/mcp/src/**/*.ts": [
+      "bash -c 'cd packages/mcp && npx tsc --noEmit'"
+    ]
   }
 }

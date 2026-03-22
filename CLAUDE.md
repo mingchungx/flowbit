@@ -36,7 +36,12 @@ pnpm db:push             # Push schema
 pnpm dev                 # Start main app at :3000
 pnpm sim:dev             # Start simulation at :3001
 pnpm test                # Run tests (needs Postgres)
+pnpm typecheck           # Typecheck all apps + packages
+pnpm lint                # ESLint with autofix (web)
+pnpm lint:check          # ESLint without fix (CI)
 ```
+
+Pre-commit hook (Husky) runs `lint-staged` which typechecks any changed package automatically.
 
 ## Architecture decisions to know
 

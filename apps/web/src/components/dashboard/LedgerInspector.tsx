@@ -39,19 +39,32 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 export function LedgerInspector({ transactionId }: Props) {
-  const [data, setData] = useState<LedgerData | null>(null);
+  const [fetchState, setFetchState] = useState<{
+    txId: string | null;
+    data: LedgerData | null;
+  }>({ txId: null, data: null });
 
   useEffect(() => {
-    if (!transactionId) {
-      setData(null);
-      return;
-    }
+    if (!transactionId) return;
+
+    let cancelled = false;
 
     fetch(`/api/dashboard/ledger/${transactionId}`)
       .then((r) => r.json())
-      .then(setData)
-      .catch(() => setData(null));
+      .then((d) => {
+        if (!cancelled) setFetchState({ txId: transactionId, data: d });
+      })
+      .catch(() => {
+        if (!cancelled) setFetchState({ txId: transactionId, data: null });
+      });
+
+    return () => { cancelled = true; };
   }, [transactionId]);
+
+  // Derive display data: show fetched data only if it matches the current selection
+  const data = transactionId && fetchState.txId === transactionId
+    ? fetchState.data
+    : null;
 
   return (
     <div className="flex flex-col overflow-hidden border-t border-[var(--color-border)]">

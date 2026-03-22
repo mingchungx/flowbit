@@ -2,7 +2,6 @@ import { db } from "@/lib/db";
 import {
   agreements,
   usageRecords,
-  wallets,
   transactions,
 } from "@/lib/db/schema";
 import { eq, and, or, lte, sql, isNull, ne } from "drizzle-orm";
