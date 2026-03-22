@@ -1,0 +1,11 @@
+{
+  "name": "flowbit",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "lint": "pnpm --filter web lint",
+    "db:push": "pnpm --filter web db:push",
+    "db:generate": "pnpm --filter web db:generate"
+  }
+}

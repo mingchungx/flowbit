@@ -1,0 +1,12 @@
+{
+  "name": "@flowbit/cli",
+  "version": "0.0.1",
+  "private": true,
+  "bin": {
+    "agent-pay": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  }
+}
