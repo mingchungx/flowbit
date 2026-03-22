@@ -13,7 +13,7 @@ export async function setupSimulation(seed: number = 42): Promise<SimulationStat
     const profConfig = PROFESSIONS[professionIndex];
 
     const wallet = await createWallet(AGENT_NAMES[i]);
-    await fundWallet(wallet.id, 1000, `sim_fund_${i}_${seed}`);
+    await fundWallet(wallet.id, 1000, `sim_fund_${wallet.id}`);
 
     const riskOptions: RiskTolerance[] = ["conservative", "moderate", "aggressive"];
 
