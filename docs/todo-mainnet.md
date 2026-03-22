@@ -36,13 +36,15 @@ The system currently uses testnet USDC on Base Sepolia with a custom mintable ER
 - Cold storage for reserves vs. hot wallet for operations
 - Maximum exposure limits
 
-## Prerequisites (must be done first)
+## Prerequisites
 
-1. [Authentication](./todo-auth.md)
-2. [Private key security](./todo-private-keys.md)
-3. [On-chain settlement](./todo-onchain-settlement.md)
-4. [Rate limiting](./todo-rate-limiting.md)
-5. [Observability](./todo-observability.md)
-6. [Deployment](./todo-deployment.md)
+| # | Prerequisite | Status |
+|---|-------------|--------|
+| 1 | Authentication & API keys | **Done** — SHA-256 hashed keys, agent/admin scopes, wallet ownership |
+| 2 | [Private key security](./todo-private-keys.md) | **Partial** — AES-256-GCM at rest done; KMS/HSM remaining |
+| 3 | [On-chain settlement](./todo-onchain-settlement.md) | **Not started** — batch netting, withdrawals, deposits |
+| 4 | [Rate limiting](./todo-rate-limiting.md) | **Partial** — request limits done; financial limits remaining |
+| 5 | [Observability](./todo-observability.md) | **Partial** — logging + health done; metrics/alerting remaining |
+| 6 | [Deployment](./todo-deployment.md) | **Partial** — Dockerfile + CI done; deploy pipeline/managed DB remaining |
 
 ## This is the final milestone. Do not attempt mainnet without completing all prerequisites.

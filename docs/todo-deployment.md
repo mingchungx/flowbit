@@ -1,43 +1,32 @@
 # TODO: Deployment
 
-## Status: Partial (Dockerfile + CI done)
+## Status: Partial
 
-## Completed
+**Done:** Dockerfile, CI pipeline (GitHub Actions), env template, standalone Next.js output.
+**Not done:** Deploy-on-merge pipeline, managed Postgres, DNS/TLS.
 
-### Dockerfile
-- [x] Multi-stage Docker build: deps → build → production
-- [x] Uses Next.js standalone output for minimal image size
-- [x] Runs as non-root `nextjs` user
-- [x] `next.config.ts` set to `output: "standalone"`
+## Done
 
-### CI/CD
+- [x] Multi-stage Dockerfile: deps -> build -> production (non-root `nextjs` user)
+- [x] `next.config.ts` set to `output: "standalone"` for minimal Docker image
 - [x] `.github/workflows/ci.yml` — lint, typecheck, test on every PR and push to main
-- [x] Tests run against real Postgres (service container)
-- [x] Uses pnpm caching for fast installs
-
-### Environment Template
+- [x] CI tests run against real Postgres via service container
+- [x] SDK built before typecheck to satisfy cross-package type resolution
 - [x] `apps/web/.env.production.example` with all required/optional vars
 
-## Remaining
+## Not Done
 
 ### Deploy Pipeline
-- [ ] `.github/workflows/deploy.yml` — deploy on merge to main
-- [ ] Target platform: Railway, Fly.io, Render, or self-hosted VPS
-- [ ] Run `pnpm db:migrate` as part of deploy
+- [ ] `.github/workflows/deploy.yml` — auto-deploy on merge to main
+- [ ] Target platform decision: Railway, Fly.io, Render, or self-hosted VPS
+- [ ] Run `pnpm db:migrate` as part of deploy (not `db:push`)
 
-### Database
-- [ ] Managed Postgres (Neon, Supabase, Railway Postgres, or RDS)
-- [ ] Connection pooling for production load
+### Managed Database
+- [ ] Managed Postgres: Neon, Supabase, Railway Postgres, or RDS
+- [ ] Connection pooling for production load (PgBouncer or built-in)
 - [ ] Automated backups
-- [ ] SSL required
+- [ ] SSL required for connections
 
 ### DNS & TLS
-- [ ] Custom domain with HTTPS
-- [ ] API versioning strategy
-
-## Files Changed
-
-- `Dockerfile` — multi-stage production build
-- `.github/workflows/ci.yml` — CI pipeline
-- `apps/web/.env.production.example` — env var template
-- `apps/web/next.config.ts` — standalone output
+- [ ] Custom domain with HTTPS (e.g., `api.flowbit.dev`)
+- [ ] API versioning strategy (start with flat `/api/` or move to `/api/v1/`)

@@ -117,7 +117,6 @@ The `docs/` folder contains design documents and production readiness TODOs:
 | File | Content |
 |------|---------|
 | `design.md` | Architecture, schema, policy engine, security model, phase status |
-| `todo-auth.md` | API key system, wallet ownership, admin keys |
 | `todo-deployment.md` | Hosting, managed Postgres, CI/CD |
 | `todo-sdk-publish.md` | npm publishing, versioning |
 | `todo-private-keys.md` | Key encryption, KMS, HSM migration |
