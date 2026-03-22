@@ -1,37 +1,34 @@
 # TODO: Publish SDK to npm
 
-## Status: Not started
+## Status: Partial (package prepared)
 
-## Problem
+## Completed
 
-`@flowbit/sdk` is a local workspace package. External developers and agents can't install it.
+### Package Preparation
+- [x] Bumped to version 0.1.0
+- [x] Removed `"private": true`
+- [x] Added `files` field (dist + README)
+- [x] Added `repository`, `license` (MIT), `keywords`, `description` fields
+- [x] `main` and `types` already pointed to `./dist/`
 
-## Requirements
+## Remaining
 
-### Package Publishing
-- Publish `@flowbit/sdk` to npm as a public package
-- Semantic versioning (start at 0.1.0)
-- Built JS + type declarations in the published artifact
-- `package.json` needs: `main`, `types`, `files`, `repository`, `license` fields
-- Remove `"private": true`
+### Publishing
+- [ ] Publish to npm: `cd packages/sdk && pnpm publish --access public`
+- [ ] Set up npm automation token for CI
+- [ ] Add `publish:sdk` script to root package.json
 
 ### Documentation
-- README with install instructions: `npm install @flowbit/sdk`
-- API reference for every method on `FlowbitClient`
-- Code examples for common flows (create wallet, fund, send, agreements)
-- TypeDoc or hand-written — either works
+- [ ] Expand `packages/sdk/README.md` with install instructions and API reference
+- [ ] Code examples for common flows
 
 ### Changelog
-- Maintain a CHANGELOG.md for the SDK package
-- Or use GitHub releases with auto-generated notes
+- [ ] CHANGELOG.md or GitHub releases with auto-generated notes
 
 ### MCP Package
-- Consider publishing `@flowbit/mcp` too so agents can `npx @flowbit/mcp` to start the server
-- Or distribute as a single binary
+- [ ] Consider publishing `@flowbit/mcp` for `npx @flowbit/mcp`
+- [ ] Or distribute as a single binary
 
-## Files to Change
+## Files Changed
 
-- `packages/sdk/package.json` — remove `private`, add `files`, `repository`, `license`
-- `packages/sdk/README.md` — expand with install + full API reference
-- Add `packages/sdk/.npmignore` or use `files` field to control what ships
-- Root: add `publish:sdk` script
+- `packages/sdk/package.json` — publishing fields added
