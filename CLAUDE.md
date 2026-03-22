@@ -14,7 +14,7 @@ flowbit/
 ├── packages/sdk/        # TypeScript client + agent tool schemas
 ├── packages/mcp/        # MCP server (stdio transport, wraps SDK)
 ├── contracts/           # TestUSDC.sol (mintable ERC20 for testnet)
-├── docs/                # Design documents
+├── docs/                # Design docs, TODOs, and production requirements
 └── docker-compose.yml   # Postgres 16
 ```
 
@@ -90,6 +90,35 @@ pnpm test                # Run tests (needs Postgres)
 **Adding MCP tools:** Add a `server.registerTool(...)` call in `packages/mcp/src/index.ts`. Use zod schemas for input validation. Rebuild with `pnpm --filter @flowbit/mcp build`.
 
 **After changes to CLI/SDK/MCP:** These are compiled TypeScript packages. Rebuild before testing: `pnpm --filter <package> build`.
+
+## docs/ directory
+
+The `docs/` folder contains design documents and production readiness TODOs:
+
+| File | Content |
+|------|---------|
+| `design.md` | Architecture, schema, policy engine, security model, phase status |
+| `todo-auth.md` | API key system, wallet ownership, admin keys |
+| `todo-deployment.md` | Hosting, managed Postgres, CI/CD |
+| `todo-sdk-publish.md` | npm publishing, versioning |
+| `todo-private-keys.md` | Key encryption, KMS, HSM migration |
+| `todo-onchain-settlement.md` | Batch netting, withdrawals, deposits |
+| `todo-rate-limiting.md` | Request + financial rate limits |
+| `todo-observability.md` | Logging, metrics, alerting |
+| `todo-mainnet.md` | Real USDC, compliance, audit (depends on all others) |
+
+## Keeping docs up to date
+
+**When making code changes, always update the relevant markdown files in the same commit.** Do not make a code change in one commit and a doc update in a separate commit. Batch them together.
+
+Files to check on every change:
+- `README.md` — if you add/change API endpoints, CLI commands, or project structure
+- `CLAUDE.md` — if you add new files, directories, env vars, or change conventions
+- `AGENTS.md` — if you change invariants, safety rules, or the dependency graph
+- `docs/design.md` — if you implement a planned phase or change architecture
+- `docs/todo-*.md` — if you complete or partially complete a TODO item
+- `apps/web/README.md` — if you change web app endpoints or scripts
+- Package READMEs — if you change CLI commands, SDK methods, or MCP tools
 
 ## Git rules
 
