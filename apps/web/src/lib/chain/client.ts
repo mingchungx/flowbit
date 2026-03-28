@@ -120,7 +120,7 @@ export async function getChainStatus(): Promise<ChainHealthStatus> {
         address: config.deployerAddress as `0x${string}`,
       });
       result.deployerEthBalance = formatEther(balance);
-      result.deployerHasGas = balance > 0n;
+      result.deployerHasGas = balance > BigInt(0);
     } catch {
       // Could not check balance
     }
