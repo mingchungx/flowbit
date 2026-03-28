@@ -1,6 +1,18 @@
 # TODO: On-Chain Settlement (Phase 3)
 
-## Status: Not started
+## Status: In progress (testnet infrastructure complete)
+
+### Completed
+
+- **Chain health checks** -- `isChainConfigured()`, `getChainConfigStatus()`, `getChainStatus()` helpers in `apps/web/src/lib/chain/client.ts`
+- **Chain status endpoint** -- `GET /api/chain/status` (admin-only) returns full chain configuration and live health data
+- **Health check integration** -- `GET /api/health?include=chain` checks RPC connectivity, contract readability, and deployer gas balance
+- **Improved error messages** -- all chain functions throw actionable errors telling users exactly what to configure
+- **TestUSDC ABI** -- added `totalSupply` function to ABI for contract health checks
+- **Testnet E2E test** -- `apps/web/scripts/testnet-e2e.ts` exercises the full off-chain + on-chain flow
+- **Testnet guide** -- `docs/testnet-guide.md` with step-by-step setup instructions
+
+### Remaining
 
 ## Problem
 

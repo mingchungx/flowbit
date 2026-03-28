@@ -4,10 +4,23 @@ import { publicClient, getDeployerClient } from "./client";
 import { testUsdcAbi } from "./testUsdcAbi";
 import { decryptPrivateKey } from "@/lib/crypto/keys";
 
+// Re-export chain configuration helpers
+export {
+  isChainConfigured,
+  getChainConfigStatus,
+  getChainStatus,
+} from "./client";
+export type { ChainConfigStatus, ChainHealthStatus } from "./client";
+
 function getContractAddress(): `0x${string}` {
   const addr = process.env.TEST_USDC_ADDRESS;
   if (!addr) {
-    throw new Error("TEST_USDC_ADDRESS env var is required");
+    throw new Error(
+      "TEST_USDC_ADDRESS is not set. " +
+        "To enable on-chain operations, deploy TestUSDC first:\n" +
+        "  DEPLOYER_PRIVATE_KEY=0x... pnpm --filter web deploy:usdc\n" +
+        "Then add TEST_USDC_ADDRESS=<contract address> to apps/web/.env.local"
+    );
   }
   return addr as `0x${string}`;
 }

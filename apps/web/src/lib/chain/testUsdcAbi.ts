@@ -6,6 +6,7 @@
  * - transfer(address to, uint256 amount)
  * - balanceOf(address) → uint256
  * - decimals() → uint8
+ * - totalSupply() → uint256
  */
 export const testUsdcAbi = [
   {
@@ -54,6 +55,13 @@ export const testUsdcAbi = [
     name: "symbol",
     inputs: [],
     outputs: [{ name: "", type: "string" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalSupply",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",
   },
 ] as const;
