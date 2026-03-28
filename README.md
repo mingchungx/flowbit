@@ -301,3 +301,7 @@ Open http://localhost:3001, click **init** then **start**. 100 agents with diffe
 - **Right top**: live event feed (SSE-powered)
 - **Right bottom**: leaderboard sorted by balance
 - **Top bar**: year/day progress, speed controls (1x to 100x)
+
+## License
+
+[MIT](LICENSE)
