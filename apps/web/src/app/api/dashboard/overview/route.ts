@@ -2,66 +2,65 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { wallets, transactions, policies } from "@/lib/db/schema";
 import { sql, gte, eq } from "drizzle-orm";
-import { requireAuth, handleAuthError } from "@/lib/core/auth";
+import { requireAuth } from "@/lib/core/auth";
+import { handleApiError } from "@/lib/core/api-errors";
+import { withRequestLogging } from "@/lib/core/request-logger";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  try {
-    await requireAuth(request, { scope: "admin" });
+  return withRequestLogging(request, async () => {
+    try {
+      await requireAuth(request, { scope: "admin" });
 
-    const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    const [walletStats] = await db
-      .select({
-        totalWallets: sql<number>`COUNT(*)::int`,
-        totalBalance: sql<string>`COALESCE(SUM(${wallets.balance}), 0)`,
-      })
-      .from(wallets);
+      const [walletStats] = await db
+        .select({
+          totalWallets: sql<number>`COUNT(*)::int`,
+          totalBalance: sql<string>`COALESCE(SUM(${wallets.balance}), 0)`,
+        })
+        .from(wallets);
 
-    const [txLast24h] = await db
-      .select({
-        count: sql<number>`COUNT(*)::int`,
-      })
-      .from(transactions)
-      .where(gte(transactions.createdAt, oneDayAgo));
+      const [txLast24h] = await db
+        .select({
+          count: sql<number>`COUNT(*)::int`,
+        })
+        .from(transactions)
+        .where(gte(transactions.createdAt, oneDayAgo));
 
-    const [txLastHour] = await db
-      .select({
-        count: sql<number>`COUNT(*)::int`,
-      })
-      .from(transactions)
-      .where(gte(transactions.createdAt, oneHourAgo));
+      const [txLastHour] = await db
+        .select({
+          count: sql<number>`COUNT(*)::int`,
+        })
+        .from(transactions)
+        .where(gte(transactions.createdAt, oneHourAgo));
 
-    const [policyStats] = await db
-      .select({
-        activePolicies: sql<number>`COUNT(*)::int`,
-      })
-      .from(policies)
-      .where(eq(policies.active, true));
+      const [policyStats] = await db
+        .select({
+          activePolicies: sql<number>`COUNT(*)::int`,
+        })
+        .from(policies)
+        .where(eq(policies.active, true));
 
-    const [lastActivity] = await db
-      .select({
-        lastActivityAt: sql<string | null>`MAX(${transactions.createdAt})`,
-      })
-      .from(transactions);
+      const [lastActivity] = await db
+        .select({
+          lastActivityAt: sql<string | null>`MAX(${transactions.createdAt})`,
+        })
+        .from(transactions);
 
-    return NextResponse.json({
-      totalWallets: walletStats.totalWallets,
-      totalBalance: walletStats.totalBalance,
-      transactionsLast24h: txLast24h.count,
-      transactionsLastHour: txLastHour.count,
-      activePolicies: policyStats.activePolicies,
-      lastActivityAt: lastActivity.lastActivityAt,
-    });
-  } catch (error) {
-    const authResp = handleAuthError(error);
-    if (authResp) return authResp;
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 500 }
-    );
-  }
+      return NextResponse.json({
+        totalWallets: walletStats.totalWallets,
+        totalBalance: walletStats.totalBalance,
+        transactionsLast24h: txLast24h.count,
+        transactionsLastHour: txLastHour.count,
+        activePolicies: policyStats.activePolicies,
+        lastActivityAt: lastActivity.lastActivityAt,
+      });
+    } catch (error) {
+      return handleApiError(error);
+    }
+  });
 }

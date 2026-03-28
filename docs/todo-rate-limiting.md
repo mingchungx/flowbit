@@ -2,8 +2,8 @@
 
 ## Status: Partial
 
-**Done:** Per-key and per-IP request rate limiting (in-memory sliding window).
-**Not done:** Financial rate limits, Redis backend, DDoS protection.
+**Done:** Per-key and per-IP request rate limiting (in-memory sliding window), DB-backed financial rate limits.
+**Not done:** Redis backend, DDoS protection.
 
 ## Done
 
@@ -12,14 +12,14 @@
 - [x] Integrated into auth middleware — checked on every authenticated request
 - [x] Automatic cleanup of expired entries every 60s
 - [x] Returns retry-after guidance when limit exceeded
+- [x] Max wallets per API key: 100 (DB-backed, `apps/web/src/lib/core/financial-limits.ts`)
+- [x] Max transactions per wallet per hour: 60 (DB-backed, queries `transactions` table)
+- [x] Max total USDC volume per API key per day: 100,000 (DB-backed, sums across all owned wallets)
+- [x] Financial limits are separate from request limits — enforced in route handlers before financial operations
+- [x] Returns HTTP 429 with descriptive reason when financial limit exceeded
+- [x] Centralized error handling via `handleApiError` (`apps/web/src/lib/core/api-errors.ts`) — maps known errors to HTTP status codes, never leaks internals for unknown errors
 
 ## Not Done
-
-### Financial Rate Limits
-- [ ] Max wallets per API key (e.g., 100)
-- [ ] Max transactions per wallet per hour
-- [ ] Max total USDC volume per API key per day
-- [ ] These are separate from request limits — a 200 request can still reject the financial operation
 
 ### Persistent Rate Limiting
 - [ ] Redis/Valkey backend for multi-server deployments (current in-memory store resets on restart)
