@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "deploy:usdc": "tsx scripts/deploy-test-usdc.ts",
-    "db:create-admin-key": "tsx scripts/create-admin-key.ts"
+    "db:create-admin-key": "tsx scripts/create-admin-key.ts",
+    "testnet:e2e": "tsx scripts/testnet-e2e.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",

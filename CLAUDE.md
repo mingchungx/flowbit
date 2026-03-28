@@ -89,6 +89,9 @@ Pre-commit hook (Husky) runs `lint-staged` which typechecks any changed package 
 | Dashboard API routes | `apps/web/src/app/api/dashboard/` |
 | Bootstrap script | `apps/web/scripts/create-admin-key.ts` |
 | Deploy script | `apps/web/scripts/deploy-test-usdc.ts` |
+| Testnet E2E test | `apps/web/scripts/testnet-e2e.ts` |
+| Chain status API | `apps/web/src/app/api/chain/status/route.ts` |
+| Testnet guide | `docs/testnet-guide.md` |
 | Simulation engine | `apps/simulation/src/lib/engine/` |
 | Simulation dashboard | `apps/simulation/src/components/` |
 | Simulation API | `apps/simulation/src/app/api/simulation/` |
@@ -120,7 +123,8 @@ The `docs/` folder contains design documents and production readiness TODOs:
 | `todo-deployment.md` | Hosting, managed Postgres, CI/CD |
 | `todo-sdk-publish.md` | npm publishing, versioning |
 | `todo-private-keys.md` | Key encryption, KMS, HSM migration |
-| `todo-onchain-settlement.md` | Batch netting, withdrawals, deposits |
+| `todo-onchain-settlement.md` | Batch netting, withdrawals, deposits (testnet infra complete) |
+| `testnet-guide.md` | Step-by-step testnet setup and E2E testing |
 | `todo-rate-limiting.md` | Request + financial rate limits |
 | `todo-observability.md` | Logging, metrics, alerting |
 | `todo-mainnet.md` | Real USDC, compliance, audit (depends on all others) |

@@ -253,6 +253,8 @@ With these set, `fund` mints real testnet tUSDC on-chain to the wallet's address
 | `/api/agreements/:id/usage` | `POST` | Report metered usage |
 | `/api/agreements/:id/settle` | `POST` | Settle a specific agreement |
 | `/api/agreements/settle` | `POST` | Settle all due agreements |
+| `/api/chain/status` | `GET` | Chain configuration and health (admin) |
+| `/api/health` | `GET` | Health check (`?include=chain` for chain health) |
 
 ## Testing
 
@@ -262,6 +264,25 @@ pnpm test
 ```
 
 35 tests run against real Postgres (not mocks) covering wallet CRUD, double-entry ledger, idempotent payments, policy enforcement, and all three agreement types (subscription, usage, retainer).
+
+### Testnet E2E Test
+
+Run a comprehensive end-to-end test against a live Flowbit instance with optional Base Sepolia integration:
+
+```bash
+# Start the server first
+docker compose up -d && pnpm db:push && pnpm dev
+
+# In another terminal — create an admin key if you don't have one
+pnpm db:create-admin-key
+
+# Run the E2E test
+FLOWBIT_ADMIN_KEY=fb_admin_... pnpm --filter web testnet:e2e
+```
+
+The E2E test exercises: wallet creation, funding (with optional on-chain minting), payments, idempotency, policy enforcement, agreement creation and settlement, and transaction log verification. On-chain steps are skipped gracefully if chain configuration is not set.
+
+See [docs/testnet-guide.md](docs/testnet-guide.md) for the full testnet setup guide including deploying TestUSDC to Base Sepolia.
 
 ## Project Structure
 

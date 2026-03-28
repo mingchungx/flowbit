@@ -61,6 +61,7 @@ pnpm flowbit send --from <agent-id> --to <vendor-id> --amount 25
 | `/api/agreements/:id/usage` | `POST` | Report metered usage |
 | `/api/agreements/:id/settle` | `POST` | Settle a specific agreement |
 | `/api/agreements/settle` | `POST` | Settle all due agreements |
+| `/api/chain/status` | `GET` | Chain config + health (admin-only) |
 | `/api/dashboard/overview` | `GET` | Aggregated system stats |
 | `/api/dashboard/feed` | `GET` | Transaction feed `?since=&wallet_id=&limit=` |
 | `/api/dashboard/ledger/:txId` | `GET` | Double-entry ledger detail |
@@ -80,6 +81,7 @@ pnpm db:check         # Verify migrations match schema
 pnpm db:drop          # Drop a migration
 pnpm db:studio        # Open Drizzle Studio
 pnpm deploy:usdc      # Deploy TestUSDC to Base Sepolia
+pnpm testnet:e2e      # Run testnet E2E test (needs FLOWBIT_ADMIN_KEY)
 ```
 
 ## Environment Variables
