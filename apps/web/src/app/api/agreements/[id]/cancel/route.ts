@@ -1,28 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  cancelAgreement,
-  AgreementNotFoundError,
-} from "@/lib/core/agreements";
-import { requireAuth, handleAuthError } from "@/lib/core/auth";
+import { cancelAgreement } from "@/lib/core/agreements";
+import { requireAuth } from "@/lib/core/auth";
+import { handleApiError } from "@/lib/core/api-errors";
+import { withRequestLogging } from "@/lib/core/request-logger";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    await requireAuth(request);
-    const { id } = await params;
-    const agreement = await cancelAgreement(id);
-    return NextResponse.json(agreement);
-  } catch (error) {
-    const authResp = handleAuthError(error);
-    if (authResp) return authResp;
-    if (error instanceof AgreementNotFoundError) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
+  return withRequestLogging(request, async () => {
+    try {
+      await requireAuth(request);
+      const { id } = await params;
+      const agreement = await cancelAgreement(id);
+      return NextResponse.json(agreement);
+    } catch (error) {
+      return handleApiError(error);
     }
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 500 }
-    );
-  }
+  });
 }

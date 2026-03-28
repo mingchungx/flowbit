@@ -2,7 +2,9 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { transactions, wallets } from "@/lib/db/schema";
 import { gt, desc, eq, sql, and } from "drizzle-orm";
-import { requireAuth, handleAuthError } from "@/lib/core/auth";
+import { requireAuth } from "@/lib/core/auth";
+import { handleApiError } from "@/lib/core/api-errors";
+import { withRequestLogging } from "@/lib/core/request-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -72,74 +74,71 @@ function formatRow(row: {
 }
 
 export async function GET(request: NextRequest) {
-  // Authenticate before opening the stream
-  try {
-    await requireAuth(request, { scope: "admin" });
-  } catch (error) {
-    const authResp = handleAuthError(error);
-    if (authResp) return authResp;
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+  return withRequestLogging(request, async () => {
+    // Authenticate before opening the stream
+    try {
+      await requireAuth(request, { scope: "admin" });
+    } catch (error) {
+      return handleApiError(error);
+    }
 
-  const walletId = request.nextUrl.searchParams.get("wallet_id");
+    const walletId = request.nextUrl.searchParams.get("wallet_id");
 
-  const encoder = new TextEncoder();
-  let cancelled = false;
+    const encoder = new TextEncoder();
+    let cancelled = false;
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      let cursor = new Date();
-      const sentIds = new Set<string>();
+    const stream = new ReadableStream({
+      async start(controller) {
+        let cursor = new Date();
+        const sentIds = new Set<string>();
 
-      const poll = async () => {
-        if (cancelled) return;
+        const poll = async () => {
+          if (cancelled) return;
 
-        try {
-          const rows = await buildQuery(walletId, cursor);
-          if (rows.length > 0) {
-            cursor = rows[0].createdAt;
+          try {
+            const rows = await buildQuery(walletId, cursor);
+            if (rows.length > 0) {
+              cursor = rows[0].createdAt;
 
-            for (const row of rows.reverse()) {
-              if (sentIds.has(row.id)) continue;
-              sentIds.add(row.id);
-              const data = JSON.stringify(formatRow(row));
-              controller.enqueue(
-                encoder.encode(`data: ${data}\n\n`)
-              );
-            }
+              for (const row of rows.reverse()) {
+                if (sentIds.has(row.id)) continue;
+                sentIds.add(row.id);
+                const data = JSON.stringify(formatRow(row));
+                controller.enqueue(
+                  encoder.encode(`data: ${data}\n\n`)
+                );
+              }
 
-            if (sentIds.size > 1000) {
-              const arr = Array.from(sentIds);
-              for (let i = 0; i < arr.length - 500; i++) {
-                sentIds.delete(arr[i]);
+              if (sentIds.size > 1000) {
+                const arr = Array.from(sentIds);
+                for (let i = 0; i < arr.length - 500; i++) {
+                  sentIds.delete(arr[i]);
+                }
               }
             }
+          } catch {
+            // DB error — skip this tick
           }
-        } catch {
-          // DB error — skip this tick
-        }
 
-        if (!cancelled) {
-          setTimeout(poll, 2000);
-        }
-      };
+          if (!cancelled) {
+            setTimeout(poll, 2000);
+          }
+        };
 
-      controller.enqueue(encoder.encode(`: connected\n\n`));
-      poll();
-    },
-    cancel() {
-      cancelled = true;
-    },
-  });
+        controller.enqueue(encoder.encode(`: connected\n\n`));
+        poll();
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
 
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
-    },
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+      },
+    });
   });
 }

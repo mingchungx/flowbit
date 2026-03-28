@@ -64,6 +64,12 @@ Pre-commit hook (Husky) runs `lint-staged` which typechecks any changed package 
 
 **Rate limiting.** Per-API-key (100 req/s) and per-IP (20 req/s) sliding window limiters. In-memory — resets on restart.
 
+**Financial rate limits.** DB-backed limits prevent abuse: max 100 wallets per API key, max 60 transactions per wallet per hour, max 100,000 USDC volume per API key per day. These are checked in route handlers before financial operations and return 429 when exceeded. See `apps/web/src/lib/core/financial-limits.ts`.
+
+**Request logging.** All API routes are wrapped with `withRequestLogging` which logs method, path, status code, duration, and abbreviated API key ID for every request. See `apps/web/src/lib/core/request-logger.ts`.
+
+**Standardized error handling.** All API routes use `handleApiError` from `apps/web/src/lib/core/api-errors.ts` which maps known error types to HTTP status codes and never leaks internal details for unknown errors.
+
 ## Where to find things
 
 | What | Where |
@@ -72,6 +78,9 @@ Pre-commit hook (Husky) runs `lint-staged` which typechecks any changed package 
 | DB connection | `apps/web/src/lib/db/index.ts` |
 | Auth + API keys | `apps/web/src/lib/core/auth.ts` |
 | Rate limiting | `apps/web/src/lib/core/rate-limit.ts` |
+| Financial rate limits | `apps/web/src/lib/core/financial-limits.ts` |
+| Request logging | `apps/web/src/lib/core/request-logger.ts` |
+| API error handler | `apps/web/src/lib/core/api-errors.ts` |
 | Ledger + wallet ops | `apps/web/src/lib/core/ledger.ts` |
 | Policy engine | `apps/web/src/lib/core/policies.ts` |
 | Key encryption | `apps/web/src/lib/crypto/keys.ts` |
