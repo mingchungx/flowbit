@@ -6,7 +6,7 @@ Rules and invariants for any AI coding agent working in this repo. Violations of
 
 ### 1. Never mutate `wallets.balance` directly
 
-All balance changes MUST go through `ledger.ts` functions (`fundWallet`, `sendPayment`) which create ledger entries and update the cached balance inside a Postgres transaction. Writing a raw `UPDATE wallets SET balance = ...` anywhere will cause the ledger to diverge from the cached balance.
+All balance changes MUST go through the ledger module functions (`fundWallet` in `funding.ts`, `sendPayment` in `payments.ts`) which create ledger entries and update the cached balance inside a Postgres transaction. These are re-exported from `ledger.ts` for backward compatibility. Writing a raw `UPDATE wallets SET balance = ...` anywhere will cause the ledger to diverge from the cached balance.
 
 ### 2. Never expose `privateKey` in API responses
 
@@ -48,7 +48,7 @@ Changes to `apps/web` API response shapes must be reflected in `packages/sdk/src
 
 ## Common Mistakes to Avoid
 
-- **Returning full wallet rows from new endpoints.** Always use explicit column selection to exclude `privateKey`. Copy the select pattern from `getWallet` in `ledger.ts`.
+- **Returning full wallet rows from new endpoints.** Always use explicit column selection to exclude `privateKey`. Use the `WALLET_PUBLIC_COLUMNS` constant from `wallets.ts` or copy the select pattern from `getWallet`.
 - **Forgetting to handle `WalletNotFoundError` in route handlers.** Every route that takes a wallet ID should catch this and return 404.
 - **Adding financial operations without idempotency.** If it creates a transaction, it needs an idempotency key.
 - **Using `db.delete()` in production code.** Deleting ledger entries or transactions destroys the audit trail. Mark records as cancelled/reversed instead.

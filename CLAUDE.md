@@ -72,7 +72,12 @@ Pre-commit hook (Husky) runs `lint-staged` which typechecks any changed package 
 | DB connection | `apps/web/src/lib/db/index.ts` |
 | Auth + API keys | `apps/web/src/lib/core/auth.ts` |
 | Rate limiting | `apps/web/src/lib/core/rate-limit.ts` |
-| Ledger + wallet ops | `apps/web/src/lib/core/ledger.ts` |
+| Ledger (barrel re-export) | `apps/web/src/lib/core/ledger.ts` |
+| Error classes | `apps/web/src/lib/core/errors.ts` |
+| Wallet CRUD | `apps/web/src/lib/core/wallets.ts` |
+| Funding logic | `apps/web/src/lib/core/funding.ts` |
+| Payment logic | `apps/web/src/lib/core/payments.ts` |
+| Transaction queries | `apps/web/src/lib/core/transactions.ts` |
 | Policy engine | `apps/web/src/lib/core/policies.ts` |
 | Key encryption | `apps/web/src/lib/crypto/keys.ts` |
 | Structured logger | `apps/web/src/lib/logger.ts` |
@@ -84,7 +89,14 @@ Pre-commit hook (Husky) runs `lint-staged` which typechecks any changed package 
 | CLI source | `packages/cli/src/` |
 | SDK source | `packages/sdk/src/` |
 | MCP server | `packages/mcp/src/index.ts` |
-| Agreements engine | `apps/web/src/lib/core/agreements.ts` |
+| Agreements (barrel re-export) | `apps/web/src/lib/core/agreements/index.ts` |
+| Agreement types + errors | `apps/web/src/lib/core/agreements/types.ts` |
+| Agreement helpers | `apps/web/src/lib/core/agreements/helpers.ts` |
+| Agreement creation | `apps/web/src/lib/core/agreements/create.ts` |
+| Agreement queries | `apps/web/src/lib/core/agreements/query.ts` |
+| Agreement settlement | `apps/web/src/lib/core/agreements/settle.ts` |
+| Agreement cancellation | `apps/web/src/lib/core/agreements/cancel.ts` |
+| Usage reporting | `apps/web/src/lib/core/agreements/usage.ts` |
 | Dashboard components | `apps/web/src/components/dashboard/` |
 | Dashboard API routes | `apps/web/src/app/api/dashboard/` |
 | Bootstrap script | `apps/web/scripts/create-admin-key.ts` |
